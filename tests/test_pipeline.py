@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 
 from qwen_auto_qc.config import RunConfig
-from qwen_auto_qc.pipeline import AutoQCPipeline
+from qwen_auto_qc.pipeline.processor import AutoQCPipeline
 from qwen_auto_qc.types import DetectionSample, InferenceResult
 
 

@@ -2,7 +2,7 @@ import torch
 from PIL import Image
 
 from qwen_auto_qc.config import RunConfig
-from qwen_auto_qc.inference import QwenGroundingInference
+from qwen_auto_qc.vlm.classifier import QwenGroundingInference
 
 
 class _Tokenizer:
@@ -28,6 +28,33 @@ def test_build_grounding_prompt_contains_box_tokens():
     )
     assert "<|box_start|>" in prepared.prompt
     assert "trafficlight" in prepared.prompt
+
+
+def test_build_red_rectangle_prompt_returns_same_size_image():
+    config = RunConfig(inference_mode="with_red_rectangle")
+    inferencer = QwenGroundingInference(config, loaded=_Loaded())
+    prepared = inferencer.build_red_rectangle_prompt(
+        Image.new("RGB", (100, 100)), [10, 20, 30, 40]
+    )
+    assert prepared.image.size == (100, 100)
+    assert "red rectangle" in prepared.prompt
+
+
+def test_build_coordinates_prompt_contains_coordinates():
+    config = RunConfig(inference_mode="coordinates_text")
+    inferencer = QwenGroundingInference(config, loaded=_Loaded())
+    prepared = inferencer.build_coordinates_prompt(
+        Image.new("RGB", (100, 100)), [10, 20, 30, 40]
+    )
+    assert "x=10" in prepared.prompt
+    assert "width=20" in prepared.prompt
+
+
+def test_build_crop_prompt_uses_crop_image():
+    config = RunConfig(inference_mode="crop_only")
+    inferencer = QwenGroundingInference(config, loaded=_Loaded())
+    prepared = inferencer.build_crop_prompt(Image.new("RGB", (100, 100)), [10, 20, 30, 40])
+    assert prepared.image.size == (20, 20)
 
 
 def test_parse_response_maps_aliases():

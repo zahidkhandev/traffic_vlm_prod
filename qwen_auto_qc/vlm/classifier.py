@@ -5,11 +5,12 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from ..config import RunConfig
 from ..model_loader import LoadedModel, load_qwen_model
 from ..types import DetectionSample, InferenceResult
+from .prompt_modes import validate_inference_mode
 
 CLASS_TOKEN_ALIASES = {
     "traffic light": "trafficlight",
@@ -37,15 +38,19 @@ class QwenGroundingInference:
             for name in self.prompt_names
         ]
 
-    def build_grounding_prompt(
-        self, full_img: Image.Image, box: list[int]
-    ) -> PreparedPrompt:
+    def _normalize_box(self, full_img: Image.Image, box: list[int]) -> tuple[int, int, int, int]:
         x1, y1, x2, y2 = box
         width, height = full_img.size
         norm_x1 = int((x1 / width) * 1000)
         norm_y1 = int((y1 / height) * 1000)
         norm_x2 = int((x2 / width) * 1000)
         norm_y2 = int((y2 / height) * 1000)
+        return norm_x1, norm_y1, norm_x2, norm_y2
+
+    def build_grounding_prompt(
+        self, full_img: Image.Image, box: list[int]
+    ) -> PreparedPrompt:
+        norm_x1, norm_y1, norm_x2, norm_y2 = self._normalize_box(full_img, box)
         class_names_str = ", ".join(self.prompt_names)
         prompt = (
             f"<|box_start|>({norm_x1},{norm_y1}),({norm_x2},{norm_y2})<|box_end|>\n"
@@ -53,6 +58,62 @@ class QwenGroundingInference:
             f"Reply with ONLY the single word (no explanation)."
         )
         return PreparedPrompt(image=full_img, prompt=prompt)
+
+    def build_red_rectangle_prompt(
+        self, full_img: Image.Image, box: list[int]
+    ) -> PreparedPrompt:
+        image_with_box = full_img.copy()
+        draw = ImageDraw.Draw(image_with_box)
+        x1, y1, x2, y2 = box
+        draw.rectangle([x1, y1, x2, y2], outline="red", width=4)
+
+        class_names_str = ", ".join(self.prompt_names)
+        prompt = (
+            f"Look at the object inside the red rectangle. "
+            f"Choose exactly ONE from: {class_names_str}. "
+            f"Reply with ONLY the single word."
+        )
+        return PreparedPrompt(image=image_with_box, prompt=prompt)
+
+    def build_coordinates_prompt(
+        self, full_img: Image.Image, box: list[int]
+    ) -> PreparedPrompt:
+        x1, y1, x2, y2 = box
+        width = x2 - x1
+        height = y2 - y1
+        class_names_str = ", ".join(self.prompt_names)
+        prompt = (
+            f"There is one labeled object in this image.\n"
+            f"The object is at pixel coordinates x={x1}, y={y1}, width={width}, height={height}.\n"
+            f"What is the object at that location? Choose exactly ONE from: {class_names_str}.\n\n"
+            f"Reply with ONLY the single word."
+        )
+        return PreparedPrompt(image=full_img, prompt=prompt)
+
+    def build_crop_prompt(
+        self, full_img: Image.Image, box: list[int]
+    ) -> PreparedPrompt:
+        x1, y1, x2, y2 = box
+        crop = full_img.crop((x1, y1, x2, y2))
+        class_names_str = ", ".join(self.prompt_names)
+        prompt = (
+            f"What is the main object in this image crop? "
+            f"Choose exactly ONE from: {class_names_str}. "
+            f"Reply with ONLY the single word."
+        )
+        return PreparedPrompt(image=crop, prompt=prompt)
+
+    def prepare_prompt(self, full_img: Image.Image, box: list[int]) -> PreparedPrompt:
+        mode = validate_inference_mode(self.config.inference_mode)
+        if mode == "without_red_rectangle":
+            return self.build_grounding_prompt(full_img, box)
+        if mode == "with_red_rectangle":
+            return self.build_red_rectangle_prompt(full_img, box)
+        if mode == "coordinates_text":
+            return self.build_coordinates_prompt(full_img, box)
+        if mode == "crop_only":
+            return self.build_crop_prompt(full_img, box)
+        raise ValueError(f"Unsupported inference_mode: {mode}")
 
     def parse_response(
         self, response_text: str, first_token_logits: torch.Tensor
@@ -98,7 +159,7 @@ class QwenGroundingInference:
             ) from exc
 
         full_img = Image.open(sample.image_path).convert("RGB")
-        prepared = self.build_grounding_prompt(full_img, sample.box)
+        prepared = self.prepare_prompt(full_img, sample.box)
         messages = [
             {
                 "role": "user",

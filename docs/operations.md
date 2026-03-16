@@ -1,0 +1,78 @@
+# Operations
+
+## Normal local workflow
+
+1. activate env
+2. set dataset env vars
+3. check config
+4. run small smoke test
+5. enable MLflow
+6. run larger sample
+
+## Good first run
+
+Use:
+- `max_samples: 1`
+- `mlflow.enabled: false`
+
+Command:
+```bash
+python run_cli.py run --config configs/local.yaml
+```
+
+## Good second run
+
+Use:
+- `max_samples: 2`
+- `mlflow.enabled: true`
+
+Then open MLflow UI.
+
+## What to check after each run
+
+Check:
+- `runs/run_.../run_summary.json`
+- `runs/run_.../metrics.json`
+- `runs/run_.../all_samples.parquet`
+- `runs/run_.../flagged_samples.parquet`
+
+If MLflow is enabled, also check:
+- `mlruns/`
+- experiment `qwen_auto_qc`
+
+## Common problems
+
+### Model does not load
+Check:
+- model path is correct
+- transformers version supports Qwen3-VL
+- GPU/CPU config is correct
+
+### `qwen_vl_utils` import fails
+This package is required for real inference.
+Install the correct Qwen runtime dependencies first.
+
+### No outputs written
+Check:
+- image path exists
+- label path exists
+- `max_samples` is not zero
+- categories in labels match supported class list
+
+### MLflow run missing
+Check:
+- `mlflow.enabled: true`
+- tracking uri is valid
+- UI is pointed to same backend store
+
+## Production checklist
+
+Before calling this production ready:
+- local smoke test passes
+- MLflow run is visible
+- ruff passes
+- mypy passes
+- tests pass
+- Docker build works
+- Podman build works
+- one container smoke run works

@@ -22,7 +22,7 @@ steps:
     displayName: Install dependencies
 
   - script: |
-      python -m compileall src
+      python -m compileall qwen_auto_qc
     displayName: Smoke compile
 
   - script: |

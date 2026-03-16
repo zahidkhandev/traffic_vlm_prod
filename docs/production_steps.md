@@ -1,80 +1,45 @@
-# Qwen AutoQC Production Steps
+# Qwen AutoQC Notes
 
-## Architecture
-The production package lives under `production/qwen_auto_qc/` and is isolated from the experiment scripts in `data_clean/confident_learning/`.
+## Main flow
+1. load config
+2. read data
+3. run Qwen on boxes
+4. score results
+5. save outputs
+6. log to MLflow if enabled
 
-Core flow:
-1. Load typed run config.
-2. Parse BDD labels into validated detections.
-3. Run Qwen3-VL full-image grounding inference.
-4. Compute class-threshold QC flags.
-5. Persist run outputs and log to MLflow.
-6. Surface the same package through Azure ML and Databricks wrappers.
+## Main files
+- `qwen_auto_qc/config.py`: typed runtime config
+- `qwen_auto_qc/dataset.py`: BDD detection extraction
+- `qwen_auto_qc/vlm/classifier.py`: grounding prompt + Qwen3-VL inference
+- `qwen_auto_qc/analysis/scoring.py`: thresholding and QC decisions
+- `qwen_auto_qc/results.py`: structured artifact writing
+- `qwen_auto_qc/pipeline/processor.py`: end-to-end orchestration
+- `qwen_auto_qc/mlflow_tracking.py`: MLflow logging
 
-Main modules:
-- `src/qwen_auto_qc/config.py`: typed runtime config
-- `src/qwen_auto_qc/dataset.py`: BDD detection extraction
-- `src/qwen_auto_qc/inference.py`: grounding prompt + Qwen3-VL inference
-- `src/qwen_auto_qc/scoring.py`: thresholding and QC decisions
-- `src/qwen_auto_qc/results.py`: structured artifact writing
-- `src/qwen_auto_qc/pipeline.py`: end-to-end orchestration
-- `src/qwen_auto_qc/mlflow_tracking.py`: MLflow logging
-
-## Local Setup
-1. Install dependencies from `requirements.txt`.
-2. Ensure the Qwen-VL runtime extras are available, including `qwen_vl_utils`.
-3. Update `production/qwen_auto_qc/configs/local.yaml` if your dataset paths differ.
-4. Run:
-
+## Run local
 ```bash
-python production/qwen_auto_qc/run_cli.py run --config production/qwen_auto_qc/configs/local.yaml
+python run_cli.py run --config configs/local.yaml
 ```
 
-## Output Contract
+## Output
 Each run writes:
 - `run_config.json`
+- `run_manifest.json`
 - `metrics.json`
 - `run_summary.json`
 - `all_samples.parquet` or CSV fallback
 - `flagged_samples.parquet` or CSV fallback
 
-`run_summary.json` contains:
-- run id
-- total sample count
-- flagged sample count
-- error rate
-- mean latency
-- thresholds
-- artifact paths
+Run tracking:
+- `run_manifest.json` stores config hash and config changes vs previous run
+- `run_index.json` stores basic history of runs
 
 ## MLflow
-- Enable MLflow in config before cloud runs.
-- Standard tag: `algorithm=qwen_full_image_grounding`
-- Log params, metrics, thresholds, and run artifacts.
+If enabled, it logs params, metrics, thresholds, and artifacts.
 
-## Azure ML
-- Use `configs/azureml.yaml` for command jobs.
-- The initial deployment shape is batch command execution, not an online endpoint.
-
-## Azure DevOps
-- PR validation runs lint, types, unit tests, and a smoke import.
-- Main branch builds the package image and can trigger Azure ML batch execution.
-
-## Databricks
-- Use `databricks/auto_qc_job.py` to invoke the same package against batch data.
-- The first version is file-based; promote to Delta-native ingestion after validation.
-
-## Promotion Criteria
-- Fixed benchmark slice is reproducible.
-- CI passes.
-- MLflow run artifacts are complete.
-- Azure ML smoke job succeeds.
-
-## Rollback
-- Revert to the previous released package version and config bundle.
-- Preserve prior run artifacts and MLflow metadata for auditability.
-
-## Development Notes
-- The package keeps experiment code untouched under `data_clean/confident_learning/`.
-- Tests are deterministic and avoid external model dependencies by mocking the Qwen loader boundary.
-- The local entrypoint is `run_cli.py`; the packaged entrypoint is `qwen-auto-qc`.
+## Current status
+- package is split and cleaner now
+- tests are passing
+- local container files are there
+- next real step is local model smoke run + MLflow check

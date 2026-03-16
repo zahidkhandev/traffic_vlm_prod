@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY pyproject.toml /app/pyproject.toml
 COPY README.md /app/README.md
-COPY src /app/src
+COPY qwen_auto_qc /app/qwen_auto_qc
 COPY configs /app/configs
 COPY run_cli.py /app/run_cli.py
 COPY requirements.txt /app/requirements.txt

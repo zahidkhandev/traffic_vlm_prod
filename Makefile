@@ -14,10 +14,10 @@ test:
 	. .venv/bin/activate && pytest tests --basetemp=pytest_tmp -p no:cacheprovider
 
 lint:
-	. .venv/bin/activate && ruff check src tests && ruff format --check src tests
+	. .venv/bin/activate && ruff check qwen_auto_qc tests && ruff format --check qwen_auto_qc tests
 
 typecheck:
-	. .venv/bin/activate && mypy src
+	. .venv/bin/activate && mypy qwen_auto_qc
 
 docker-build:
 	docker build -t qwen-auto-qc:local .

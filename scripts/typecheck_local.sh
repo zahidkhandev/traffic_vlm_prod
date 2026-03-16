@@ -2,4 +2,4 @@
 set -eu
 
 . ./.venv/bin/activate
-mypy src
+mypy qwen_auto_qc

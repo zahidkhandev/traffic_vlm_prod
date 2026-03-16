@@ -4,10 +4,12 @@ import json
 import os
 import re
 from dataclasses import asdict, dataclass, field
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from .types import OBJECT_CLASSES
+from .vlm.prompt_modes import validate_inference_mode
 
 try:
     import yaml
@@ -41,6 +43,8 @@ class RunConfig:
     debug: bool = False
     save_debug_images: bool = False
     use_grounding: bool = True
+    inference_mode: str = "without_red_rectangle"
+    experiment_modes: list[str] = field(default_factory=list)
     class_names: list[str] = field(default_factory=lambda: OBJECT_CLASSES.copy())
     thresholds: dict[str, float] = field(default_factory=dict)
     benchmark_warmup: int = 1
@@ -49,6 +53,9 @@ class RunConfig:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    def copy_with(self, **changes: Any) -> "RunConfig":
+        return replace(self, **changes)
 
 
 _ENV_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
@@ -68,6 +75,10 @@ def _coerce_config(data: dict[str, Any]) -> RunConfig:
     data = _expand_env_value(data)
     mlflow_data = data.pop("mlflow", {})
     config = RunConfig(**data)
+    config.inference_mode = validate_inference_mode(config.inference_mode)
+    config.experiment_modes = [
+        validate_inference_mode(mode) for mode in config.experiment_modes
+    ]
     config.mlflow = MLflowConfig(**mlflow_data)
     if not config.thresholds:
         config.thresholds = {name: 0.0 for name in config.class_names}

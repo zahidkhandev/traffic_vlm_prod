@@ -1,107 +1,196 @@
 # Qwen AutoQC
 
-Production-oriented Qwen3-VL based AutoQC pipeline for BDD-style object labels.
+This is the Qwen AutoQC pipeline.
 
-This folder is intended to be runnable as an isolated project from inside
-`production/qwen_auto_qc` without depending on root-level project files.
-Treat this folder as its own repo root for day-to-day work.
+The goal is simple:
+- take image + label data
+- run Qwen on each labeled object
+- find labels that look suspicious
+- save the results in a clean format
+- log runs to MLflow when needed
 
-## What It Does
-- loads image/label pairs
-- extracts valid object detections
-- asks Qwen3-VL to classify the object referenced by a grounding box prompt
-- computes QC flags from class probabilities
-- writes structured run outputs
-- optionally logs the run to MLflow
+## What this does
 
-## Local Bootstrap
+- reads image + label data
+- runs Qwen on each object box
+- checks if label looks wrong
+- saves outputs
+- can log to MLflow
+
+## Pipeline flow
+
+1. load config
+2. read images and labels
+3. extract valid object boxes
+4. run Qwen on each object
+5. compute QC scores
+6. flag possible label issues
+7. save outputs
+8. log to MLflow if enabled
+
+## Folder structure
+
+Main folders:
+- `qwen_auto_qc/`
+- `configs/`
+- `scripts/`
+- `tests/`
+- `docs/`
+- `azure_devops/`
+- `databricks/`
+
+Main code areas:
+- `qwen_auto_qc/vlm/` : Qwen model inference
+- `qwen_auto_qc/pipeline/` : end-to-end processing
+- `qwen_auto_qc/analysis/` : scoring logic
+- `qwen_auto_qc/viz/` : visualization hooks
+
+Main entrypoints:
+- `run_cli.py`
+- `scripts/run_autoqc.py`
+
+## Setup
+
 ```bash
-cd production/qwen_auto_qc
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
 ```
 
-PowerShell helper:
+PowerShell:
+
 ```powershell
-cd production/qwen_auto_qc
 .\scripts\bootstrap_local.ps1
 ```
 
-POSIX helper:
+Linux/macOS:
+
 ```bash
-cd production/qwen_auto_qc
 sh scripts/bootstrap_local.sh
 ```
 
-Create a local `.env` from `.env.example` and set shared-project paths there.
+Then create `.env` from `.env.example` and set your local paths.
 
-## Local Run
+## Run
+
 ```bash
-cd production/qwen_auto_qc
 python run_cli.py run --config configs/local.yaml
 ```
 
-## Benchmark
+Main commands:
+
+- run pipeline
 ```bash
-cd production/qwen_auto_qc
+python run_cli.py run --config configs/local.yaml
+```
+
+- benchmark
+```bash
+python run_cli.py benchmark --config configs/local.yaml
+```
+
+- print Azure job spec
+```bash
+python run_cli.py azureml-spec --config configs/local.yaml
+```
+
+- run experiment matrix
+```bash
+python run_cli.py experiment --config configs/experiment.yaml
+```
+
+## Benchmark
+
+```bash
 python run_cli.py benchmark --config configs/local.yaml
 ```
 
 ## Tests
+
 ```bash
-cd production/qwen_auto_qc
 pytest tests --basetemp=pytest_tmp -p no:cacheprovider
 ```
 
 ## Lint
+
 ```bash
-cd production/qwen_auto_qc
 ruff check src tests
 ruff format --check src tests
 ```
 
-## Type Check
+## Type check
+
 ```bash
-cd production/qwen_auto_qc
 mypy src
 ```
 
-PowerShell:
+PowerShell test helper:
+
 ```powershell
-cd production/qwen_auto_qc
 .\scripts\test_local.ps1
 ```
 
-POSIX:
+Linux/macOS test helper:
+
 ```bash
-cd production/qwen_auto_qc
 sh scripts/test_local.sh
 ```
 
 ## Containers
-Docker:
+
+Docker build:
+
 ```bash
-cd production/qwen_auto_qc
 docker build -t qwen-auto-qc:local .
 ```
 
-Podman:
+Podman build:
+
 ```bash
-cd production/qwen_auto_qc
 podman build -f Containerfile -t qwen-auto-qc:local .
 ```
 
-## Repo-Local Git
-This folder can be used as an isolated git root:
-```bash
-cd production/qwen_auto_qc
-git status
-```
+## Outputs
+
+Each run creates a timestamped folder in `runs/`.
+
+Typical files:
+- `run_config.json`
+- `run_manifest.json`
+- `metrics.json`
+- `run_summary.json`
+- `all_samples.parquet`
+- `flagged_samples.parquet`
+
+If parquet is not available, CSV fallback is used.
+
+Monitoring files:
+- `run_manifest.json` : current run info + config diff vs previous run
+- `run_index.json` : simple history of all runs in `runs/`
+
+## Current status
+
+What is already done:
+- package split into smaller modules
+- local CLI works
+- tests are passing
+- Dockerfile and Containerfile are present
+- MLflow logging code is present
+
+What still needs real smoke validation:
+- actual Qwen inference on local machine
+- MLflow end-to-end local run
+- Docker/Podman runtime test with real model + data
 
 ## Docs
-- `docs/production_steps.md`
+
+- `docs/architecture.md`
+- `docs/config_reference.md`
 - `docs/local_run.md`
 - `docs/mlflow_local.md`
 - `docs/container.md`
+- `docs/testing.md`
+- `docs/operations.md`
+- `docs/production_steps.md`
+- `docs/experimentation.md`

@@ -6,6 +6,7 @@ import time
 
 from .azureml_job import azureml_job_as_dict
 from .config import RunConfig, load_run_config
+from .experiments.runner import run_experiment_matrix
 from .pipeline.processor import AutoQCPipeline
 
 
@@ -49,6 +50,13 @@ def azureml_spec_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def experiment_command(args: argparse.Namespace) -> int:
+    config = _load_config(args)
+    summary = run_experiment_matrix(config)
+    print(json.dumps(summary, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Qwen AutoQC production CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -58,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
         "evaluate": evaluate_command,
         "benchmark": benchmark_command,
         "azureml-spec": azureml_spec_command,
+        "experiment": experiment_command,
     }.items():
         sub = subparsers.add_parser(name)
         sub.add_argument("--config", default="production/qwen_auto_qc/configs/local.yaml")

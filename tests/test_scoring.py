@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from qwen_auto_qc.scoring import compute_margin, make_decisions
+from qwen_auto_qc.analysis.scoring import compute_margin, make_decisions
 from qwen_auto_qc.types import DetectionSample, InferenceResult
 
 
