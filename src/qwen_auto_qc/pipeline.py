@@ -1,0 +1,3 @@
+from .pipeline.processor import AutoQCPipeline
+
+__all__ = ["AutoQCPipeline"]

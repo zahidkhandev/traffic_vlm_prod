@@ -1,0 +1,12 @@
+torch
+numpy
+pandas
+pillow
+transformers
+tqdm
+pyyaml
+pyarrow
+mlflow
+pytest
+mypy
+ruff
