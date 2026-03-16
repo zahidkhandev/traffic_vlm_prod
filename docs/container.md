@@ -13,7 +13,6 @@ docker build -t qwen-auto-qc:local .
 
 Check:
 - `configs/local.yaml`
-- `.env`
 - model path
 - image path
 - label path

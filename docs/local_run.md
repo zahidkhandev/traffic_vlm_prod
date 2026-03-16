@@ -2,9 +2,9 @@
 
 ## Before run
 - install deps
-- make sure model path is correct in `configs/local.yaml`
+- create a `.env` file in the project root
 - make sure `qwen_vl_utils` works in your env
-- make sure image and label paths are set
+- make sure dataset is inside `data/raw/`
 
 ## Small smoke test
 Use small sample count first:
@@ -15,18 +15,33 @@ mlflow:
   enabled: false
 ```
 
-Set these env vars:
+Keep the dataset inside this project.
+Keep the model inside this project too.
+
+Example:
+- `models/qwen-vl-4b`
+- `data/raw/mini/images/test`
+- `data/raw/mini/labels/test`
+
+Create `.env`:
 
 ```bash
-AUTOQC_IMAGES_PATH=data/raw/images/test
-AUTOQC_LABELS_PATH=data/raw/labels/test
+AUTOQC_MODEL_PATH=models/qwen-vl-4b
+AUTOQC_IMAGES_PATH=data/raw/mini/images/test
+AUTOQC_LABELS_PATH=data/raw/mini/labels/test
 ```
 
-Best way is copy `.env.example` to `.env` and edit it.
+`run_cli.py` loads `.env` automatically.
 
 ## Run
 ```bash
 python run_cli.py run --config configs/local.yaml
+```
+
+Or pass them directly:
+
+```bash
+python run_cli.py run --config configs/local.yaml --model-path models/qwen-vl-4b --images-path data/raw/mini/images/test --labels-path data/raw/mini/labels/test
 ```
 
 PowerShell:
@@ -56,6 +71,5 @@ Monitoring files:
 
 ## Benchmark
 ```bash
-cd production/qwen_auto_qc
 python run_cli.py benchmark --config configs/local.yaml
 ```

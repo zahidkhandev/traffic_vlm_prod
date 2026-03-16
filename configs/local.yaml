@@ -1,4 +1,4 @@
-model_path: qwen-vl-4b
+model_path: ${AUTOQC_MODEL_PATH}
 images_path: ${AUTOQC_IMAGES_PATH}
 labels_path: ${AUTOQC_LABELS_PATH}
 output_root: runs

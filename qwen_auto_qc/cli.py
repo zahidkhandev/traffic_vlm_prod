@@ -5,13 +5,23 @@ import json
 import time
 
 from .azureml_job import azureml_job_as_dict
-from .config import RunConfig, load_run_config
+from .config import RunConfig, load_run_config, validate_run_config
 from .experiments.runner import run_experiment_matrix
 from .pipeline.processor import AutoQCPipeline
 
 
 def _load_config(args: argparse.Namespace) -> RunConfig:
-    return load_run_config(args.config)
+    config = load_run_config(args.config)
+    overrides: dict[str, str] = {}
+    if getattr(args, "model_path", None):
+        overrides["model_path"] = args.model_path
+    if getattr(args, "images_path", None):
+        overrides["images_path"] = args.images_path
+    if getattr(args, "labels_path", None):
+        overrides["labels_path"] = args.labels_path
+    if overrides:
+        config = config.copy_with(**overrides)
+    return validate_run_config(config)
 
 
 def run_command(args: argparse.Namespace) -> int:
@@ -69,7 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
         "experiment": experiment_command,
     }.items():
         sub = subparsers.add_parser(name)
-        sub.add_argument("--config", default="production/qwen_auto_qc/configs/local.yaml")
+        sub.add_argument("--config", default="configs/local.yaml")
+        sub.add_argument("--model-path")
+        sub.add_argument("--images-path")
+        sub.add_argument("--labels-path")
         sub.set_defaults(func=handler)
     return parser
 

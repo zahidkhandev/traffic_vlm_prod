@@ -1,7 +1,8 @@
-from qwen_auto_qc.config import RunConfig, load_run_config
+import pytest
+
+from qwen_auto_qc.config import load_run_config
 
 
-def test_default_config_thresholds():
-    config = load_run_config(None)
-    assert isinstance(config, RunConfig)
-    assert "car" in config.thresholds
+def test_default_config_requires_runtime_paths():
+    with pytest.raises(ValueError, match="Missing required config values"):
+        load_run_config(None)

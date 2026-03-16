@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "qwen-auto-qc"
 version = "0.1.0"
-description = "Production-oriented local AutoQC pipeline built on Qwen3-VL grounding prompts."
+description = "Production-oriented AutoQC pipeline built on Qwen3-VL grounding prompts."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

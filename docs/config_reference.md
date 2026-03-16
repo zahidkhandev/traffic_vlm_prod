@@ -5,27 +5,37 @@ This project mainly uses `configs/local.yaml`.
 ## Main config fields
 
 ### `model_path`
+Required at runtime.
+Pass through env var or CLI.
 Path or model id for Qwen.
 
 Example:
 ```yaml
-model_path: qwen-vl-4b
+model_path: models/qwen-vl-4b
 ```
 
 ### `images_path`
+Required at runtime.
+Pass through env var or CLI.
 Path to images.
 
-Usually set through env var:
+Use a relative path inside this project.
+
+Example:
 ```yaml
-images_path: ${AUTOQC_IMAGES_PATH}
+images_path: data/raw/mini/images/test
 ```
 
 ### `labels_path`
+Required at runtime.
+Pass through env var or CLI.
 Path to labels.
 
-Usually set through env var:
+Use a relative path inside this project.
+
+Example:
 ```yaml
-labels_path: ${AUTOQC_LABELS_PATH}
+labels_path: data/raw/mini/labels/test
 ```
 
 ### `output_root`
@@ -85,8 +95,9 @@ mlflow:
 Defined in `.env.example`:
 
 ```env
-AUTOQC_IMAGES_PATH=data/raw/images/test
-AUTOQC_LABELS_PATH=data/raw/labels/test
+AUTOQC_MODEL_PATH=models/qwen-vl-4b
+AUTOQC_IMAGES_PATH=data/raw/mini/images/test
+AUTOQC_LABELS_PATH=data/raw/mini/labels/test
 MLFLOW_TRACKING_URI=file:./mlruns
 ```
 

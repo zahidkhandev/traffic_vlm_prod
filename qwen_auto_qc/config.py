@@ -30,9 +30,9 @@ class MLflowConfig:
 
 @dataclass(slots=True)
 class RunConfig:
-    model_path: str = "qwen-vl-4b"
-    images_path: str = "data/raw/images/test"
-    labels_path: str = "data/raw/labels/test"
+    model_path: str | None = None
+    images_path: str | None = None
+    labels_path: str | None = None
     output_root: str = "runs"
     checkpoint_root: str = "checkpoints"
     device: str = "auto"
@@ -61,6 +61,27 @@ class RunConfig:
 _ENV_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
 
 
+def load_dotenv(dotenv_path: str | Path = ".env") -> None:
+    path = Path(dotenv_path)
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key or key in os.environ:
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        os.environ[key] = value
+
+
 def _expand_env_value(value: Any) -> Any:
     if isinstance(value, str):
         return _ENV_PATTERN.sub(lambda match: os.environ.get(match.group(1), match.group(0)), value)
@@ -85,9 +106,31 @@ def _coerce_config(data: dict[str, Any]) -> RunConfig:
     return config
 
 
+def validate_run_config(config: RunConfig) -> RunConfig:
+    missing_fields: list[str] = []
+    for field_name in ("model_path", "images_path", "labels_path"):
+        value = getattr(config, field_name)
+        if value is None or not str(value).strip():
+            missing_fields.append(field_name)
+            continue
+        if isinstance(value, str) and _ENV_PATTERN.search(value):
+            missing_fields.append(field_name)
+
+    if missing_fields:
+        missing = ", ".join(missing_fields)
+        raise ValueError(
+            f"Missing required config values: {missing}. "
+            "Set them in the config file with environment variables or pass them on the command line."
+        )
+
+    return config
+
+
 def load_run_config(config_path: str | Path | None = None) -> RunConfig:
+    load_dotenv()
+
     if config_path is None:
-        return _coerce_config({})
+        return validate_run_config(_coerce_config({}))
 
     path = Path(config_path)
     text = path.read_text(encoding="utf-8")
@@ -101,7 +144,7 @@ def load_run_config(config_path: str | Path | None = None) -> RunConfig:
     else:
         raise ValueError(f"Unsupported config format: {path.suffix}")
 
-    return _coerce_config(data)
+    return validate_run_config(_coerce_config(data))
 
 
 def save_run_config(config: RunConfig, path: str | Path) -> None:

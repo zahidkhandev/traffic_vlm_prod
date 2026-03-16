@@ -7,7 +7,7 @@ The goal is simple:
 - run Qwen on each labeled object
 - find labels that look suspicious
 - save the results in a clean format
-- log runs to MLflow when needed
+- compare different prompt modes
 
 ## What this does
 
@@ -36,8 +36,9 @@ Main folders:
 - `scripts/`
 - `tests/`
 - `docs/`
-- `azure_devops/`
-- `databricks/`
+- `models/`
+- `data/`
+- `runs/`
 
 Main code areas:
 - `qwen_auto_qc/vlm/` : Qwen model inference
@@ -70,12 +71,30 @@ Linux/macOS:
 sh scripts/bootstrap_local.sh
 ```
 
-Then create `.env` from `.env.example` and set your local paths.
+Keep your dataset inside `data/raw/`.
+Keep your model inside `models/`.
+
+Do not commit personal runtime paths.
+Pass these through env vars or CLI args.
+
+Example env:
+
+```bash
+AUTOQC_MODEL_PATH=models/qwen-vl-4b
+AUTOQC_IMAGES_PATH=data/raw/mini/images/test
+AUTOQC_LABELS_PATH=data/raw/mini/labels/test
+```
 
 ## Run
 
 ```bash
 python run_cli.py run --config configs/local.yaml
+```
+
+Or pass the paths directly:
+
+```bash
+python run_cli.py run --config configs/local.yaml --model-path models/qwen-vl-4b --images-path data/raw/mini/images/test --labels-path data/raw/mini/labels/test
 ```
 
 Main commands:
@@ -88,11 +107,6 @@ python run_cli.py run --config configs/local.yaml
 - benchmark
 ```bash
 python run_cli.py benchmark --config configs/local.yaml
-```
-
-- print Azure job spec
-```bash
-python run_cli.py azureml-spec --config configs/local.yaml
 ```
 
 - run experiment matrix
@@ -115,14 +129,14 @@ pytest tests --basetemp=pytest_tmp -p no:cacheprovider
 ## Lint
 
 ```bash
-ruff check src tests
-ruff format --check src tests
+ruff check qwen_auto_qc tests
+ruff format --check qwen_auto_qc tests
 ```
 
 ## Type check
 
 ```bash
-mypy src
+mypy qwen_auto_qc
 ```
 
 PowerShell test helper:

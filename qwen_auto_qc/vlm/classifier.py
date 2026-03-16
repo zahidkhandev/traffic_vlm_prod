@@ -150,14 +150,23 @@ class QwenGroundingInference:
 
         return probs, parsed_class
 
-    def predict(self, sample: DetectionSample) -> InferenceResult:
+    def _process_vision_info(self, messages: list[dict]) -> tuple[list, None]:
         try:
             from qwen_vl_utils import process_vision_info
-        except ImportError as exc:  # pragma: no cover
-            raise RuntimeError(
-                "qwen_vl_utils is required for Qwen-VL image preprocessing."
-            ) from exc
+        except ImportError:
+            images = []
+            for message in messages:
+                for content in message.get("content", []):
+                    if content.get("type") == "image":
+                        images.append(content.get("image"))
+            return images, None
 
+        vision_outputs = process_vision_info(messages)
+        image_inputs = vision_outputs[0]
+        video_inputs = vision_outputs[1] if len(vision_outputs) > 1 else None
+        return image_inputs, video_inputs
+
+    def predict(self, sample: DetectionSample) -> InferenceResult:
         full_img = Image.open(sample.image_path).convert("RGB")
         prepared = self.prepare_prompt(full_img, sample.box)
         messages = [
@@ -172,9 +181,7 @@ class QwenGroundingInference:
         text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        vision_outputs = process_vision_info(messages)
-        image_inputs = vision_outputs[0]
-        video_inputs = vision_outputs[1] if len(vision_outputs) > 1 else None
+        image_inputs, video_inputs = self._process_vision_info(messages)
         inputs = self.processor(
             text=[text],
             images=image_inputs,
