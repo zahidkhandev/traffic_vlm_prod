@@ -9,6 +9,7 @@ max_samples: 5
 checkpoint_every: 5
 min_box_size: 10
 debug: false
+console_log_each_object: true
 save_debug_images: false
 use_grounding: true
 inference_mode: without_red_rectangle

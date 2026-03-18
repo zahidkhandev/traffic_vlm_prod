@@ -73,3 +73,26 @@ def test_load_run_config_reads_dotenv_automatically():
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
+
+
+def test_load_run_config_leaves_thresholds_empty_when_not_provided():
+    temp_root = Path("test_output/config_thresholds")
+    if temp_root.exists():
+        shutil.rmtree(temp_root)
+    temp_root.mkdir(parents=True, exist_ok=True)
+    config_file = temp_root / "config.yaml"
+    config_file.write_text(
+        (
+            "model_path: ${AUTOQC_MODEL_PATH}\n"
+            "images_path: ${AUTOQC_IMAGES_PATH}\n"
+            "labels_path: ${AUTOQC_LABELS_PATH}\n"
+        ),
+        encoding="utf-8",
+    )
+    os.environ["AUTOQC_MODEL_PATH"] = "models/qwen-vl-4b"
+    os.environ["AUTOQC_IMAGES_PATH"] = "images/path"
+    os.environ["AUTOQC_LABELS_PATH"] = "labels/path"
+
+    config = load_run_config(config_file)
+
+    assert config.thresholds == {}

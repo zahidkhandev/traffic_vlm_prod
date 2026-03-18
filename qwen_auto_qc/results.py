@@ -153,6 +153,7 @@ def persist_run(
         artifact_paths={
             "all_samples": str(all_path),
             "flagged_samples": str(flagged_path),
+            "run_log": str(run_dir / "run.log"),
         },
     )
 

@@ -62,6 +62,7 @@ Main files:
 - `run_manifest.json`
 - `metrics.json`
 - `run_summary.json`
+- `run.log`
 - `all_samples.parquet` or CSV fallback
 - `flagged_samples.parquet` or CSV fallback
 

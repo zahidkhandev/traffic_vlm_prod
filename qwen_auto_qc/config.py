@@ -41,6 +41,7 @@ class RunConfig:
     checkpoint_every: int = 10
     min_box_size: int = 10
     debug: bool = False
+    console_log_each_object: bool = False
     save_debug_images: bool = False
     use_grounding: bool = True
     inference_mode: str = "without_red_rectangle"
@@ -101,8 +102,6 @@ def _coerce_config(data: dict[str, Any]) -> RunConfig:
         validate_inference_mode(mode) for mode in config.experiment_modes
     ]
     config.mlflow = MLflowConfig(**mlflow_data)
-    if not config.thresholds:
-        config.thresholds = {name: 0.0 for name in config.class_names}
     return config
 
 

@@ -74,6 +74,10 @@ Save progress after this many samples.
 ### `min_box_size`
 Boxes smaller than this are ignored.
 
+### `console_log_each_object`
+When true, prints one JSON line per object for inference and one JSON line per
+object for final decision (`is_error`, threshold, confidence, latency).
+
 ### `use_grounding`
 Current production path should stay `true`.
 
