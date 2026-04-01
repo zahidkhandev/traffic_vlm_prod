@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from .config import RunConfig
@@ -31,7 +32,15 @@ def log_run_to_mlflow(config: RunConfig, summary: RunSummary, run_dir: Path) -> 
             }
         )
         mlflow.log_metrics(summary.metrics)
-        mlflow.log_dict(summary.thresholds, "thresholds.json")
+        thresholds_path = run_dir / "thresholds.json"
+        thresholds_path.write_text(
+            json.dumps(summary.thresholds, indent=2), encoding="utf-8"
+        )
+        mlflow.log_artifact(str(thresholds_path), artifact_path="config")
         for name, artifact in summary.artifact_paths.items():
-            mlflow.log_artifact(artifact, artifact_path=name)
+            artifact_path = Path(artifact)
+            if artifact_path.is_dir():
+                mlflow.log_artifacts(str(artifact_path), artifact_path=name)
+            elif artifact_path.exists():
+                mlflow.log_artifact(str(artifact_path), artifact_path=name)
         mlflow.log_artifacts(str(run_dir), artifact_path="run_bundle")

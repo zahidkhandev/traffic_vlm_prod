@@ -11,6 +11,11 @@ import pandas as pd
 
 from .config import RunConfig, save_run_config
 from .types import QCDecision, RunSummary
+from .viz.plots import (
+    save_annotation_verification_images,
+    save_error_crops,
+    write_verification_tables,
+)
 
 
 def create_run_dir(output_root: str) -> Path:
@@ -133,6 +138,26 @@ def persist_run(
 
     all_path = _write_table(all_df, run_dir / "all_samples.parquet")
     flagged_path = _write_table(flagged_df, run_dir / "flagged_samples.parquet")
+    verification_artifacts = write_verification_tables(
+        all_df, flagged_df, run_dir / "tables"
+    )
+
+    visual_artifacts: dict[str, str] = {}
+    if config.generate_visual_artifacts:
+        verification_dir = save_annotation_verification_images(
+            decisions,
+            run_dir / "annotation_verifications",
+            max_images=config.max_verification_images,
+        )
+        error_crops_dir = save_error_crops(
+            decisions,
+            run_dir / "label_errors_to_verify",
+            max_error_crops=config.max_error_crops,
+        )
+        if verification_dir is not None:
+            visual_artifacts["annotation_verifications"] = verification_dir
+        if error_crops_dir is not None:
+            visual_artifacts["label_errors_to_verify"] = error_crops_dir
 
     latencies = [decision.inference.latency_ms for decision in decisions]
     mean_latency = sum(latencies) / len(latencies) if latencies else 0.0
@@ -154,6 +179,8 @@ def persist_run(
             "all_samples": str(all_path),
             "flagged_samples": str(flagged_path),
             "run_log": str(run_dir / "run.log"),
+            **verification_artifacts,
+            **visual_artifacts,
         },
     )
 

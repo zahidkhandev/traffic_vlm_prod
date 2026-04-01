@@ -50,6 +50,9 @@ class RunConfig:
     thresholds: dict[str, float] = field(default_factory=dict)
     benchmark_warmup: int = 1
     benchmark_steps: int = 10
+    generate_visual_artifacts: bool = True
+    max_verification_images: int = 25
+    max_error_crops: int = 100
     mlflow: MLflowConfig = field(default_factory=MLflowConfig)
 
     def to_dict(self) -> dict[str, Any]:
