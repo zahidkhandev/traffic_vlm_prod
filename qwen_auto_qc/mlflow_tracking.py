@@ -14,10 +14,17 @@ def log_run_to_mlflow(config: RunConfig, summary: RunSummary, run_dir: Path) -> 
     try:
         import mlflow
     except ImportError as exc:  # pragma: no cover
-        raise RuntimeError("MLflow logging requested but mlflow is not installed.") from exc
+        raise RuntimeError(
+            "MLflow logging requested but mlflow is not installed."
+        ) from exc
 
-    if config.mlflow.tracking_uri:
-        mlflow.set_tracking_uri(config.mlflow.tracking_uri)
+    tracking_uri = (config.mlflow.tracking_uri or "").strip()
+    if not tracking_uri:
+        raise RuntimeError(
+            "MLflow enabled but no tracking URI configured. "
+            "Central tracking URI is required."
+        )
+    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(config.mlflow.experiment_name)
 
     with mlflow.start_run(run_name=config.mlflow.run_name or summary.run_id):
@@ -29,6 +36,7 @@ def log_run_to_mlflow(config: RunConfig, summary: RunSummary, run_dir: Path) -> 
                 "labels_path": config.labels_path,
                 "use_grounding": config.use_grounding,
                 "max_samples": config.max_samples,
+                "inference_mode": config.inference_mode,
             }
         )
         mlflow.log_metrics(summary.metrics)

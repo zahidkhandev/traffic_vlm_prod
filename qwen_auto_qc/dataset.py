@@ -13,6 +13,8 @@ class BDDDatasetParser:
         self.class_to_idx = {name: idx for idx, name in enumerate(config.class_names)}
 
     def iter_samples(self) -> list[DetectionSample]:
+        if self.config.labels_path is None or self.config.images_path is None:
+            raise ValueError("images_path and labels_path are required.")
         labels_path = Path(self.config.labels_path)
         images_path = Path(self.config.images_path)
         sample_idx = 0

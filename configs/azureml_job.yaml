@@ -1,0 +1,23 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: qwen-auto-qc-batch
+experiment_name: qwen_auto_qc
+code: .
+command: >-
+  python run_cli.py run
+  --config configs/azureml.yaml
+  --images-path ${{inputs.images_path}}
+  --labels-path ${{inputs.labels_path}}
+  --model-path ${{inputs.model_path}}
+inputs:
+  images_path:
+    type: uri_folder
+    path: azureml:bdd-images:latest
+  labels_path:
+    type: uri_folder
+    path: azureml:bdd-labels:latest
+  model_path:
+    type: string
+    default: qwen-vl-4b
+environment: azureml:qwen-autoqc:latest
+compute: azureml:gpu-cluster

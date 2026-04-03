@@ -5,8 +5,8 @@ output_root: runs
 checkpoint_root: checkpoints
 device: auto
 torch_dtype: auto
-max_samples: 5
-checkpoint_every: 5
+max_samples: 1
+checkpoint_every: 1
 min_box_size: 10
 debug: false
 console_log_each_object: true

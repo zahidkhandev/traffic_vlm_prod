@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 SUPPORTED_INFERENCE_MODES = [
     "without_red_rectangle",
     "with_red_rectangle",

@@ -1,6 +1,5 @@
 import torch
 from PIL import Image
-
 from qwen_auto_qc.config import RunConfig
 from qwen_auto_qc.vlm.classifier import QwenGroundingInference
 
@@ -53,7 +52,9 @@ def test_build_coordinates_prompt_contains_coordinates():
 def test_build_crop_prompt_uses_crop_image():
     config = RunConfig(inference_mode="crop_only")
     inferencer = QwenGroundingInference(config, loaded=_Loaded())
-    prepared = inferencer.build_crop_prompt(Image.new("RGB", (100, 100)), [10, 20, 30, 40])
+    prepared = inferencer.build_crop_prompt(
+        Image.new("RGB", (100, 100)), [10, 20, 30, 40]
+    )
     assert prepared.image.size == (20, 20)
 
 

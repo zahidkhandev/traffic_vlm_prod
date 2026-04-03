@@ -50,4 +50,7 @@ def test_pipeline_run_persists_outputs():
     summary, run_dir = pipeline.run()
     assert summary.flagged_samples == 1
     assert (run_dir / "run_summary.json").exists()
-    assert any(p.exists() for p in [run_dir / "all_samples.parquet", run_dir / "all_samples.csv"])
+    assert any(
+        p.exists()
+        for p in [run_dir / "all_samples.parquet", run_dir / "all_samples.csv"]
+    )

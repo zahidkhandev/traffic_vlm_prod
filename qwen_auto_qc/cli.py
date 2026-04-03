@@ -50,7 +50,11 @@ def benchmark_command(args: argparse.Namespace) -> int:
         pipeline.inferencer.predict(sample)
     elapsed = time.perf_counter() - started
     mean_ms = (elapsed / max(len(target_samples), 1)) * 1000.0
-    print(json.dumps({"samples": len(target_samples), "mean_latency_ms": mean_ms}, indent=2))
+    print(
+        json.dumps(
+            {"samples": len(target_samples), "mean_latency_ms": mean_ms}, indent=2
+        )
+    )
     return 0
 
 

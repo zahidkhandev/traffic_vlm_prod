@@ -14,16 +14,27 @@ pool:
 steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: "3.11"
+      versionSpec: "3.13"
+
+  - script: |
+      python -c "import sys; assert sys.version_info[:2] == (3, 13), f'Python 3.13 required, found {sys.version}'"
+    displayName: Verify Python version
 
   - script: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt
+      pip install -e .
     displayName: Install dependencies
 
   - script: |
-      python -m compileall qwen_auto_qc
-    displayName: Smoke compile
+      ruff check qwen_auto_qc tests
+      ruff format --check qwen_auto_qc tests
+      pylint qwen_auto_qc --fail-under=8.0
+    displayName: Lint checks
+
+  - script: |
+      mypy qwen_auto_qc
+    displayName: Type checks
 
   - script: |
       pytest tests --basetemp=pytest_tmp -p no:cacheprovider

@@ -9,7 +9,9 @@ from PIL import Image, ImageDraw
 from ..types import QCDecision
 
 
-def _safe_text(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, fill: str) -> None:
+def _safe_text(
+    draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, fill: str
+) -> None:
     try:
         draw.text(xy, text, fill=fill)
     except Exception:
@@ -41,9 +43,9 @@ def write_verification_tables(
         )
         .reset_index()
     )
-    class_summary["error_rate"] = (
-        class_summary["flagged_samples"] / class_summary["total_samples"].clip(lower=1)
-    )
+    class_summary["error_rate"] = class_summary["flagged_samples"] / class_summary[
+        "total_samples"
+    ].clip(lower=1)
     class_summary.to_csv(class_summary_csv, index=False)
 
     confusion = (
@@ -144,6 +146,9 @@ def save_placeholder_plot(output_path: str | Path) -> None:
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        "This project now writes concrete QC visual artifacts under annotation_verifications/",
+        (
+            "This project now writes concrete QC visual artifacts under "
+            "annotation_verifications/."
+        ),
         encoding="utf-8",
     )

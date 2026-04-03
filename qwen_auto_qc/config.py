@@ -3,18 +3,20 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import asdict, dataclass, field
-from dataclasses import replace
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
 from .types import OBJECT_CLASSES
 from .vlm.prompt_modes import validate_inference_mode
 
+yaml: Any
 try:
-    import yaml
+    import yaml as _yaml
 except ImportError:  # pragma: no cover
     yaml = None
+else:
+    yaml = _yaml
 
 
 @dataclass(slots=True)
@@ -58,7 +60,7 @@ class RunConfig:
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
-    def copy_with(self, **changes: Any) -> "RunConfig":
+    def copy_with(self, **changes: Any) -> RunConfig:
         return replace(self, **changes)
 
 
@@ -88,7 +90,10 @@ def load_dotenv(dotenv_path: str | Path = ".env") -> None:
 
 def _expand_env_value(value: Any) -> Any:
     if isinstance(value, str):
-        return _ENV_PATTERN.sub(lambda match: os.environ.get(match.group(1), match.group(0)), value)
+        return _ENV_PATTERN.sub(
+            lambda match: os.environ.get(match.group(1), match.group(0)),
+            value,
+        )
     if isinstance(value, list):
         return [_expand_env_value(item) for item in value]
     if isinstance(value, dict):
@@ -122,8 +127,21 @@ def validate_run_config(config: RunConfig) -> RunConfig:
         missing = ", ".join(missing_fields)
         raise ValueError(
             f"Missing required config values: {missing}. "
-            "Set them in the config file with environment variables or pass them on the command line."
+            "Set them in the config file with environment variables "
+            "or pass them on the command line."
         )
+
+    if config.mlflow.enabled:
+        tracking_uri = (config.mlflow.tracking_uri or "").strip()
+        if not tracking_uri:
+            raise ValueError(
+                "MLflow central tracking is enabled but mlflow.tracking_uri is missing."
+            )
+        if tracking_uri.startswith("file:"):
+            raise ValueError(
+                "mlflow.tracking_uri=file:... stores runs locally. "
+                "Use a central MLflow backend URI."
+            )
 
     return config
 

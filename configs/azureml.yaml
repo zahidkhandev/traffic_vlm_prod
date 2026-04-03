@@ -12,6 +12,7 @@ save_debug_images: false
 use_grounding: true
 mlflow:
   enabled: true
+  tracking_uri: ${MLFLOW_TRACKING_URI}
   experiment_name: qwen_auto_qc
   tags:
     algorithm: qwen_full_image_grounding

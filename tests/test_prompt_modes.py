@@ -1,5 +1,4 @@
 import pytest
-
 from qwen_auto_qc.vlm.prompt_modes import validate_inference_mode
 
 

@@ -48,7 +48,9 @@ def _flatten_dict(data: dict[str, Any], prefix: str = "") -> dict[str, Any]:
 
 def _find_previous_run(output_root: Path, current_run_id: str) -> Path | None:
     candidates = sorted(
-        path for path in output_root.glob("run_*") if path.is_dir() and path.name != current_run_id
+        path
+        for path in output_root.glob("run_*")
+        if path.is_dir() and path.name != current_run_id
     )
     return candidates[-1] if candidates else None
 
@@ -85,7 +87,9 @@ def _write_run_manifest(
     if previous_run is not None:
         previous_config_path = previous_run / "run_config.json"
         if previous_config_path.exists():
-            previous_config = json.loads(previous_config_path.read_text(encoding="utf-8"))
+            previous_config = json.loads(
+                previous_config_path.read_text(encoding="utf-8")
+            )
             config_changes = _config_diff(config_dict, previous_config)
 
     manifest = {
@@ -125,6 +129,42 @@ def _update_run_index(
     index_path.write_text(json.dumps(entries, indent=2), encoding="utf-8")
 
 
+def _macro_precision_recall(decisions: list[QCDecision]) -> tuple[float, float]:
+    if not decisions:
+        return 0.0, 0.0
+
+    labels = sorted(
+        {decision.sample.given_label for decision in decisions}
+        | {decision.inference.predicted_label for decision in decisions}
+    )
+    if not labels:
+        return 0.0, 0.0
+
+    precision_scores: list[float] = []
+    recall_scores: list[float] = []
+    for label in labels:
+        true_pos = 0
+        false_pos = 0
+        false_neg = 0
+        for decision in decisions:
+            given = decision.sample.given_label
+            predicted = decision.inference.predicted_label
+            if predicted == label and given == label:
+                true_pos += 1
+            elif predicted == label and given != label:
+                false_pos += 1
+            elif predicted != label and given == label:
+                false_neg += 1
+        precision_denom = true_pos + false_pos
+        recall_denom = true_pos + false_neg
+        precision_scores.append(true_pos / precision_denom if precision_denom else 0.0)
+        recall_scores.append(true_pos / recall_denom if recall_denom else 0.0)
+
+    macro_precision = sum(precision_scores) / len(precision_scores)
+    macro_recall = sum(recall_scores) / len(recall_scores)
+    return macro_precision, macro_recall
+
+
 def persist_run(
     config: RunConfig,
     decisions: list[QCDecision],
@@ -161,6 +201,7 @@ def persist_run(
 
     latencies = [decision.inference.latency_ms for decision in decisions]
     mean_latency = sum(latencies) / len(latencies) if latencies else 0.0
+    macro_precision, macro_recall = _macro_precision_recall(decisions)
 
     summary = RunSummary(
         run_id=run_dir.name,
@@ -174,6 +215,8 @@ def persist_run(
             "flagged_samples": float(len(flagged_df)),
             "error_rate": (len(flagged_df) / len(decisions)) if decisions else 0.0,
             "mean_latency_ms": mean_latency,
+            "macro_precision": macro_precision,
+            "macro_recall": macro_recall,
         },
         artifact_paths={
             "all_samples": str(all_path),

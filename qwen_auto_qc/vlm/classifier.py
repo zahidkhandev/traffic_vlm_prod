@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from importlib import import_module
+from typing import Any, Protocol, cast
 
 import numpy as np
 import torch
@@ -25,20 +27,61 @@ class PreparedPrompt:
     prompt: str
 
 
+class TokenizerProtocol(Protocol):
+    eos_token_id: int | None
+
+    def __call__(self, text: str, add_special_tokens: bool = False) -> Any: ...
+
+
+class ProcessorProtocol(Protocol):
+    tokenizer: TokenizerProtocol
+
+    def apply_chat_template(
+        self,
+        messages: list[dict[str, Any]],
+        tokenize: bool = False,
+        add_generation_prompt: bool = True,
+    ) -> str: ...
+
+    def __call__(self, **kwargs: Any) -> dict[str, Any]: ...
+
+    def batch_decode(
+        self, sequences: Any, skip_special_tokens: bool = True
+    ) -> list[str]: ...
+
+
+class ModelProtocol(Protocol):
+    device: str | torch.device
+
+    def __call__(self, **kwargs: Any) -> Any: ...
+
+    def generate(self, **kwargs: Any) -> Any: ...
+
+
 class QwenGroundingInference:
     def __init__(self, config: RunConfig, loaded: LoadedModel | None = None):
         self.config = config
-        self.loaded = loaded or load_qwen_model(config.model_path, config.device)
-        self.processor = self.loaded.processor
-        self.model = self.loaded.model
+        if loaded is not None:
+            self.loaded = loaded
+        else:
+            model_path = config.model_path
+            if model_path is None:
+                raise ValueError("model_path must be provided before inference.")
+            self.loaded = load_qwen_model(model_path, config.device)
+        self.processor = cast(ProcessorProtocol, self.loaded.processor)
+        self.model = cast(ModelProtocol, self.loaded.model)
         self.class_names = config.class_names
-        self.prompt_names = [CLASS_TOKEN_ALIASES.get(name, name) for name in self.class_names]
+        self.prompt_names = [
+            CLASS_TOKEN_ALIASES.get(name, name) for name in self.class_names
+        ]
         self.class_first_token_ids = [
             self.processor.tokenizer(name, add_special_tokens=False).input_ids[0]
             for name in self.prompt_names
         ]
 
-    def _normalize_box(self, full_img: Image.Image, box: list[int]) -> tuple[int, int, int, int]:
+    def _normalize_box(
+        self, full_img: Image.Image, box: list[int]
+    ) -> tuple[int, int, int, int]:
         x1, y1, x2, y2 = box
         width, height = full_img.size
         norm_x1 = int((x1 / width) * 1000)
@@ -54,7 +97,8 @@ class QwenGroundingInference:
         class_names_str = ", ".join(self.prompt_names)
         prompt = (
             f"<|box_start|>({norm_x1},{norm_y1}),({norm_x2},{norm_y2})<|box_end|>\n"
-            f"What object is inside this box region? Choose exactly ONE from: {class_names_str}.\n\n"
+            "What object is inside this box region? "
+            f"Choose exactly ONE from: {class_names_str}.\n\n"
             f"Reply with ONLY the single word (no explanation)."
         )
         return PreparedPrompt(image=full_img, prompt=prompt)
@@ -84,8 +128,10 @@ class QwenGroundingInference:
         class_names_str = ", ".join(self.prompt_names)
         prompt = (
             f"There is one labeled object in this image.\n"
-            f"The object is at pixel coordinates x={x1}, y={y1}, width={width}, height={height}.\n"
-            f"What is the object at that location? Choose exactly ONE from: {class_names_str}.\n\n"
+            "The object is at pixel coordinates "
+            f"x={x1}, y={y1}, width={width}, height={height}.\n"
+            "What is the object at that location? "
+            f"Choose exactly ONE from: {class_names_str}.\n\n"
             f"Reply with ONLY the single word."
         )
         return PreparedPrompt(image=full_img, prompt=prompt)
@@ -140,10 +186,17 @@ class QwenGroundingInference:
                 else 0.0
             )
 
-        probs_array = torch.nn.functional.softmax(
-            torch.tensor(class_logits, dtype=torch.float32), dim=0
-        ).cpu().numpy()
-        probs = {cls: float(prob) for cls, prob in zip(self.class_names, probs_array)}
+        probs_array = (
+            torch.nn.functional.softmax(
+                torch.tensor(class_logits, dtype=torch.float32), dim=0
+            )
+            .cpu()
+            .numpy()
+        )
+        probs = {
+            cls: float(prob)
+            for cls, prob in zip(self.class_names, probs_array, strict=True)
+        }
 
         if parsed_class is None:
             parsed_class = self.class_names[int(np.argmax(probs_array))]
@@ -152,8 +205,9 @@ class QwenGroundingInference:
 
     def _process_vision_info(self, messages: list[dict]) -> tuple[list, None]:
         try:
-            from qwen_vl_utils import process_vision_info
-        except ImportError:
+            module = import_module("qwen_vl_utils")
+            process_vision_info = module.process_vision_info
+        except (ImportError, AttributeError):
             images = []
             for message in messages:
                 for content in message.get("content", []):
@@ -190,7 +244,9 @@ class QwenGroundingInference:
             return_tensors="pt",
         )
         inputs = {
-            key: value.to(self.model.device) if isinstance(value, torch.Tensor) else value
+            key: value.to(self.model.device)
+            if isinstance(value, torch.Tensor)
+            else value
             for key, value in inputs.items()
         }
 

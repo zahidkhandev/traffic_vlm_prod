@@ -16,6 +16,12 @@ class AzureMLJobSpec:
     inputs: dict[str, str]
 
 
+def _require_value(value: str | None, field_name: str) -> str:
+    if value is None or not value.strip():
+        raise ValueError(f"{field_name} is required for Azure ML job specs.")
+    return value
+
+
 def build_azureml_command_job(
     config: RunConfig,
     compute: str = "gpu-cluster",
@@ -23,15 +29,20 @@ def build_azureml_command_job(
 ) -> AzureMLJobSpec:
     return AzureMLJobSpec(
         display_name="qwen-auto-qc-batch",
-        code="production/qwen_auto_qc",
-        command="python run_cli.py run --config configs/azureml.yaml",
+        code=".",
+        command=(
+            "python run_cli.py run --config configs/azureml.yaml "
+            "--images-path ${{inputs.images_path}} "
+            "--labels-path ${{inputs.labels_path}} "
+            "--model-path ${{inputs.model_path}}"
+        ),
         environment=environment,
         compute=compute,
         experiment_name=config.mlflow.experiment_name,
         inputs={
-            "images_path": config.images_path,
-            "labels_path": config.labels_path,
-            "model_path": config.model_path,
+            "images_path": _require_value(config.images_path, "images_path"),
+            "labels_path": _require_value(config.labels_path, "labels_path"),
+            "model_path": _require_value(config.model_path, "model_path"),
         },
     )
 

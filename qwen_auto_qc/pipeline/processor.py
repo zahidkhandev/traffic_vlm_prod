@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from ..analysis.scoring import derive_thresholds, make_decisions
 from ..config import RunConfig
 from ..dataset import BDDDatasetParser
 from ..mlflow_tracking import log_run_to_mlflow
@@ -10,11 +11,12 @@ from ..results import create_run_dir, persist_run
 from ..types import InferenceResult, RunSummary
 from ..vlm.classifier import QwenGroundingInference
 from .checkpoint import save_processed_images
-from ..analysis.scoring import derive_thresholds, make_decisions
 
 
 class AutoQCPipeline:
-    def __init__(self, config: RunConfig, inferencer: QwenGroundingInference | None = None):
+    def __init__(
+        self, config: RunConfig, inferencer: QwenGroundingInference | None = None
+    ):
         self.config = config
         self.parser = BDDDatasetParser(config)
         self.inferencer = inferencer or QwenGroundingInference(config)

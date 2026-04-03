@@ -5,7 +5,9 @@ from collections import defaultdict
 from ..types import DetectionSample, InferenceResult, QCDecision
 
 
-def compute_margin(pred_probs: dict[str, float], given_label: str) -> tuple[float, float]:
+def compute_margin(
+    pred_probs: dict[str, float], given_label: str
+) -> tuple[float, float]:
     self_confidence = float(pred_probs.get(given_label, 0.0))
     ordered = sorted(pred_probs.values(), reverse=True)
     top_conf = ordered[0] if ordered else 0.0
@@ -18,7 +20,7 @@ def derive_thresholds(
     samples: list[DetectionSample], results: list[InferenceResult]
 ) -> dict[str, float]:
     by_class: dict[str, list[float]] = defaultdict(list)
-    for sample, result in zip(samples, results):
+    for sample, result in zip(samples, results, strict=True):
         by_class[sample.given_label].append(
             float(result.pred_probs.get(sample.given_label, 0.0))
         )
@@ -44,7 +46,7 @@ def make_decisions(
     decisions: list[QCDecision] = []
     min_margin = 0.20
     min_pred_conf_for_mismatch = 0.50
-    for sample, result in zip(samples, results):
+    for sample, result in zip(samples, results, strict=True):
         self_confidence, normalized_margin = compute_margin(
             result.pred_probs, sample.given_label
         )

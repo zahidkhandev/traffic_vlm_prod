@@ -1,12 +1,12 @@
 model_path: ${AUTOQC_MODEL_PATH}
-images_path: ${AUTOQC_IMAGES_PATH}
-labels_path: ${AUTOQC_LABELS_PATH}
+images_path: data/raw/mini-2/images
+labels_path: data/raw/mini-2/labels
 output_root: runs
 checkpoint_root: checkpoints
 device: auto
 torch_dtype: auto
-max_samples: 5
-checkpoint_every: 5
+max_samples: 3
+checkpoint_every: 3
 min_box_size: 10
 debug: false
 console_log_each_object: true
@@ -17,12 +17,12 @@ experiment_modes: []
 benchmark_warmup: 1
 benchmark_steps: 3
 generate_visual_artifacts: true
-max_verification_images: 25
-max_error_crops: 100
+max_verification_images: 10
+max_error_crops: 20
 mlflow:
   enabled: false
   tracking_uri: ""
   experiment_name: qwen_auto_qc
   tags:
     algorithm: qwen_full_image_grounding
-    platform: local
+    platform: local-mini2

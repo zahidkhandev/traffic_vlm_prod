@@ -7,7 +7,7 @@ name = "qwen-auto-qc"
 version = "0.1.0"
 description = "Production-oriented AutoQC pipeline built on Qwen3-VL grounding prompts."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = "==3.13.*"
 dependencies = [
   "torch",
   "numpy",
@@ -25,6 +25,7 @@ dev = [
   "pytest",
   "mypy",
   "ruff",
+  "pylint",
 ]
 
 [project.scripts]
@@ -39,7 +40,7 @@ testpaths = ["tests"]
 addopts = "--basetemp=pytest_tmp -p no:cacheprovider"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py313"
 line-length = 88
 src = ["qwen_auto_qc", "tests"]
 
@@ -52,7 +53,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.13"
 mypy_path = "."
 packages = ["qwen_auto_qc"]
 ignore_missing_imports = true
@@ -60,3 +61,16 @@ warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 strict_optional = true
+
+[tool.pylint.main]
+py-version = "3.13"
+fail-under = 8.0
+jobs = 1
+
+[tool.pylint."messages control"]
+disable = [
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  "too-few-public-methods",
+]

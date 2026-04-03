@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
 
 import torch
 
@@ -82,17 +83,21 @@ def load_qwen_model(model_path: str, device: str = "auto") -> LoadedModel:
             video_processor_cls = Qwen3VLProcessor.get_possibly_dynamic_module(
                 "BaseVideoProcessor"
             )
+            video_processor = video_processor_cls.__new__(video_processor_cls)
             processor = Qwen3VLProcessor(
                 image_processor=image_processor,
                 tokenizer=tokenizer,
-                video_processor=video_processor_cls.__new__(video_processor_cls),
+                video_processor=cast(Any, video_processor),
                 chat_template=tokenizer.chat_template,
             )
 
-        model = Qwen3VLForConditionalGeneration.from_pretrained(
-            resolved_model_path,
-            torch_dtype=torch_dtype,
-            trust_remote_code=True,
+        model = cast(
+            Any,
+            Qwen3VLForConditionalGeneration.from_pretrained(
+                resolved_model_path,
+                torch_dtype=torch_dtype,
+                trust_remote_code=True,
+            ),
         )
         model.to(resolved_device)
     except OSError as exc:
