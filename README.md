@@ -123,7 +123,7 @@ python run_cli.py benchmark --config configs/local.yaml
 ## Tests
 
 ```bash
-pytest tests --basetemp=pytest_tmp -p no:cacheprovider
+pytest tests --basetemp=pytest_tmp -p no:cacheprovider --cov=qwen_auto_qc --cov-report=term-missing --cov-fail-under=70
 ```
 
 ## Lint

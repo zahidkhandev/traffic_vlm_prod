@@ -8,7 +8,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$WorkspaceName,
     [Parameter(Mandatory = $false)]
-    [string]$ComputeName = "gpu-cluster",
+    [string]$ComputeName = "autoqc-sandbox-dev-gpu-cluster",
     [Parameter(Mandatory = $false)]
     [string]$ComputeSize = "Standard_NC4as_T4_v3",
     [Parameter(Mandatory = $false)]

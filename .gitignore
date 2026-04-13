@@ -18,3 +18,4 @@ build/
 models
 .env
 .mypy_cache
+tmp_training_plan_unzip

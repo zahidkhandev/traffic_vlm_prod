@@ -23,9 +23,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest",
+  "pytest-cov",
   "mypy",
   "ruff",
   "pylint",
+  "types-PyYAML",
 ]
 
 [project.scripts]

@@ -24,7 +24,7 @@ def _require_value(value: str | None, field_name: str) -> str:
 
 def build_azureml_command_job(
     config: RunConfig,
-    compute: str = "gpu-cluster",
+    compute: str = "autoqc-sandbox-dev-gpu-cluster",
     environment: str = "qwen-autoqc:latest",
 ) -> AzureMLJobSpec:
     return AzureMLJobSpec(

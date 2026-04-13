@@ -37,5 +37,5 @@ steps:
     displayName: Type checks
 
   - script: |
-      pytest tests --basetemp=pytest_tmp -p no:cacheprovider
+      pytest tests --basetemp=pytest_tmp -p no:cacheprovider --cov=qwen_auto_qc --cov-report=term-missing --cov-fail-under=70
     displayName: Run tests

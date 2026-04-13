@@ -20,4 +20,4 @@ inputs:
     type: string
     default: qwen-vl-4b
 environment: azureml:qwen-autoqc:latest
-compute: azureml:gpu-cluster
+compute: azureml:autoqc-sandbox-dev-gpu-cluster

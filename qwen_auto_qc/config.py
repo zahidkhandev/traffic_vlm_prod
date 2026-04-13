@@ -12,7 +12,7 @@ from .vlm.prompt_modes import validate_inference_mode
 
 yaml: Any
 try:
-    import yaml as _yaml
+    import yaml as _yaml  # type: ignore[import-untyped]
 except ImportError:  # pragma: no cover
     yaml = None
 else:
