@@ -48,7 +48,7 @@ Main code areas:
 
 Main entrypoints:
 - `run_cli.py`
-- `scripts/run_autoqc.py`
+- `scripts/run_autoqc.py` (compatibility wrapper; prefer `run_cli.py`)
 
 ## Setup
 
@@ -209,3 +209,4 @@ What still needs real smoke validation:
 - `docs/operations.md`
 - `docs/production_steps.md`
 - `docs/experimentation.md`
+- `docs/github_azure_manual_run.md`

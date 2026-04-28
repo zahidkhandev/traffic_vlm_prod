@@ -1,0 +1,9 @@
+name: qwen-auto-qc
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.13.*
+  - pip
+  - pip:
+      - -r requirements.txt

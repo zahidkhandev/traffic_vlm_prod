@@ -105,6 +105,10 @@ AUTOQC_LABELS_PATH=data/raw/mini/labels/test
 MLFLOW_TRACKING_URI=file:./mlruns
 ```
 
+Note:
+- `file:...` tracking URIs are local-only and are rejected by `validate_run_config`.
+- For local smoke tests, keep `mlflow.enabled: false`.
+
 ## Recommended local smoke config
 
 For first run:
