@@ -19,3 +19,4 @@ models
 .env
 .mypy_cache
 tmp_training_plan_unzip
+.tmp_sanity

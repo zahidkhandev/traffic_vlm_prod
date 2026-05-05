@@ -174,7 +174,11 @@ def persist_run(
     output_root = run_dir.parent
     records = [decision.to_record() for decision in decisions]
     all_df = pd.DataFrame(records)
-    flagged_df = all_df[all_df["is_error"] == True].copy()  # noqa: E712
+    if "is_error" in all_df.columns:
+        flagged_df = all_df[all_df["is_error"] == True].copy()  # noqa: E712
+    else:
+        # Handle empty runs (or unexpected record schemas) without crashing.
+        flagged_df = all_df.iloc[0:0].copy()
 
     all_path = _write_table(all_df, run_dir / "all_samples.parquet")
     flagged_path = _write_table(flagged_df, run_dir / "flagged_samples.parquet")

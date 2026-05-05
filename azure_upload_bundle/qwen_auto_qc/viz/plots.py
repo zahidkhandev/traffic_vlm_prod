@@ -33,30 +33,55 @@ def write_verification_tables(
     all_df.to_csv(all_csv, index=False)
     flagged_df.to_csv(flagged_csv, index=False)
 
-    class_summary = (
-        all_df.groupby("given_label", dropna=False)
-        .agg(
-            total_samples=("sample_idx", "count"),
-            flagged_samples=("is_error", "sum"),
-            mean_self_confidence=("self_confidence", "mean"),
-            mean_latency_ms=("latency_ms", "mean"),
-        )
-        .reset_index()
-    )
-    class_summary["error_rate"] = class_summary["flagged_samples"] / class_summary[
-        "total_samples"
-    ].clip(lower=1)
-    class_summary.to_csv(class_summary_csv, index=False)
+    required_columns = {
+        "given_label",
+        "sample_idx",
+        "is_error",
+        "self_confidence",
+        "latency_ms",
+        "predicted_label",
+    }
 
-    confusion = (
-        all_df.groupby(["given_label", "predicted_label"], dropna=False)
-        .agg(
-            samples=("sample_idx", "count"),
-            flagged=("is_error", "sum"),
+    if not required_columns.issubset(set(all_df.columns)):
+        class_summary = pd.DataFrame(
+            columns=[
+                "given_label",
+                "total_samples",
+                "flagged_samples",
+                "mean_self_confidence",
+                "mean_latency_ms",
+                "error_rate",
+            ]
         )
-        .reset_index()
-        .sort_values(["given_label", "samples"], ascending=[True, False])
-    )
+        confusion = pd.DataFrame(
+            columns=["given_label", "predicted_label", "samples", "flagged"]
+        )
+    else:
+        class_summary = (
+            all_df.groupby("given_label", dropna=False)
+            .agg(
+                total_samples=("sample_idx", "count"),
+                flagged_samples=("is_error", "sum"),
+                mean_self_confidence=("self_confidence", "mean"),
+                mean_latency_ms=("latency_ms", "mean"),
+            )
+            .reset_index()
+        )
+        class_summary["error_rate"] = class_summary["flagged_samples"] / class_summary[
+            "total_samples"
+        ].clip(lower=1)
+
+        confusion = (
+            all_df.groupby(["given_label", "predicted_label"], dropna=False)
+            .agg(
+                samples=("sample_idx", "count"),
+                flagged=("is_error", "sum"),
+            )
+            .reset_index()
+            .sort_values(["given_label", "samples"], ascending=[True, False])
+        )
+
+    class_summary.to_csv(class_summary_csv, index=False)
     confusion.to_csv(confusion_csv, index=False)
 
     return {

@@ -252,20 +252,21 @@ class QwenGroundingInference:
 
         started = time.perf_counter()
         with torch.no_grad():
+            common_kwargs = {
+                "input_ids": inputs.get("input_ids"),
+                "attention_mask": inputs.get("attention_mask"),
+                "pixel_values": inputs.get("pixel_values"),
+                "image_grid_thw": inputs.get("image_grid_thw"),
+                "mm_token_type_ids": inputs.get("mm_token_type_ids"),
+            }
             outputs = self.model(
-                input_ids=inputs.get("input_ids"),
-                attention_mask=inputs.get("attention_mask"),
-                pixel_values=inputs.get("pixel_values"),
-                image_grid_thw=inputs.get("image_grid_thw"),
+                **common_kwargs,
                 output_hidden_states=True,
             )
             embedding = outputs.hidden_states[-1].mean(dim=1).cpu().numpy()[0].tolist()
 
             generated = self.model.generate(
-                input_ids=inputs.get("input_ids"),
-                attention_mask=inputs.get("attention_mask"),
-                pixel_values=inputs.get("pixel_values"),
-                image_grid_thw=inputs.get("image_grid_thw"),
+                **common_kwargs,
                 max_new_tokens=5,
                 do_sample=False,
                 temperature=1.0,

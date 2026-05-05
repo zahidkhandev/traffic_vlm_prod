@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 from .config import RunConfig
@@ -14,9 +15,13 @@ def log_run_to_mlflow(config: RunConfig, summary: RunSummary, run_dir: Path) -> 
     try:
         import mlflow
     except ImportError as exc:  # pragma: no cover
-        raise RuntimeError(
-            "MLflow logging requested but mlflow is not installed."
-        ) from exc
+        warnings.warn(
+            "MLflow requested but import failed; continuing without MLflow logging. "
+            f"Root cause: {type(exc).__name__}: {exc}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return
 
     tracking_uri = (config.mlflow.tracking_uri or "").strip()
     if not tracking_uri:
