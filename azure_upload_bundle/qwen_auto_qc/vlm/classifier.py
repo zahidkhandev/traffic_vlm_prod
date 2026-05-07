@@ -236,13 +236,19 @@ class QwenGroundingInference:
             messages, tokenize=False, add_generation_prompt=True
         )
         image_inputs, video_inputs = self._process_vision_info(messages)
-        inputs = self.processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt",
-        )
+        processor_kwargs = {
+            "text": [text],
+            "images": image_inputs,
+            "videos": video_inputs,
+            "padding": True,
+            "return_tensors": "pt",
+        }
+        try:
+            # Required by newer Qwen3-VL/transformers builds for M-RoPE.
+            inputs = self.processor(**processor_kwargs, return_mm_token_type_ids=True)
+        except TypeError:
+            # Older processor signatures may not support this argument.
+            inputs = self.processor(**processor_kwargs)
         inputs = {
             key: value.to(self.model.device)
             if isinstance(value, torch.Tensor)
@@ -259,6 +265,18 @@ class QwenGroundingInference:
                 "image_grid_thw": inputs.get("image_grid_thw"),
                 "mm_token_type_ids": inputs.get("mm_token_type_ids"),
             }
+            common_kwargs = {
+                key: value for key, value in common_kwargs.items() if value is not None
+            }
+            has_multimodal_grid = (
+                "image_grid_thw" in common_kwargs or "video_grid_thw" in common_kwargs
+            )
+            if has_multimodal_grid and "mm_token_type_ids" not in common_kwargs:
+                raise RuntimeError(
+                    "Processor did not return mm_token_type_ids for multimodal input. "
+                    "Upgrade transformers/Qwen processor or ensure "
+                    "return_mm_token_type_ids is supported."
+                )
             outputs = self.model(
                 **common_kwargs,
                 output_hidden_states=True,

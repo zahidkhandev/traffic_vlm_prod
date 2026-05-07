@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +19,7 @@ from .viz.plots import (
 
 
 def create_run_dir(output_root: str) -> Path:
-    run_id = datetime.now(timezone.utc).strftime("run_%Y%m%d_%H%M%S")
+    run_id = datetime.now(UTC).strftime("run_%Y%m%d_%H%M%S")
     run_dir = Path(output_root) / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     return run_dir
@@ -94,7 +94,7 @@ def _write_run_manifest(
 
     manifest = {
         "run_id": run_dir.name,
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "created_at_utc": datetime.now(UTC).isoformat(),
         "config_hash": config_hash,
         "previous_run_id": previous_run_id,
         "changed_config_keys": sorted(config_changes.keys()),
