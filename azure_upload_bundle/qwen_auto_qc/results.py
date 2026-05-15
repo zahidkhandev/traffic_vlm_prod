@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -87,9 +87,7 @@ def _write_run_manifest(
     if previous_run is not None:
         previous_config_path = previous_run / "run_config.json"
         if previous_config_path.exists():
-            previous_config = json.loads(
-                previous_config_path.read_text(encoding="utf-8")
-            )
+            previous_config = json.loads(previous_config_path.read_text(encoding="utf-8"))
             config_changes = _config_diff(config_dict, previous_config)
 
     manifest = {

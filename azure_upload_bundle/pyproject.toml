@@ -7,7 +7,7 @@ name = "qwen-auto-qc"
 version = "0.1.0"
 description = "Production-oriented AutoQC pipeline built on Qwen3-VL grounding prompts."
 readme = "README.md"
-requires-python = "==3.13.*"
+requires-python = "==3.11.*"
 dependencies = [
   "torch",
   "numpy",
@@ -42,7 +42,7 @@ testpaths = ["tests"]
 addopts = "--basetemp=pytest_tmp -p no:cacheprovider"
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py311"
 line-length = 88
 src = ["qwen_auto_qc", "tests"]
 
@@ -55,7 +55,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.11"
 mypy_path = "."
 packages = ["qwen_auto_qc"]
 ignore_missing_imports = true
@@ -65,7 +65,7 @@ warn_unused_ignores = true
 strict_optional = true
 
 [tool.pylint.main]
-py-version = "3.13"
+py-version = "3.11"
 fail-under = 8.0
 jobs = 1
 

@@ -42,7 +42,7 @@ jobs:
     code: ..
     environment: azureml:qwen-autoqc-sandbox-dev:6
     command: >-
-      python scripts/azure/run_pipeline_inference.py
+      PYTHONPATH=. python scripts/azure/run_pipeline_inference.py
       --config configs/azureml.yaml
       --prepared-inputs ${{inputs.prepared_data}}/prepared_inputs.json
       --model-path qwen-vl-4b
