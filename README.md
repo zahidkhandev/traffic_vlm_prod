@@ -114,6 +114,27 @@ python run_cli.py benchmark --config configs/local.yaml
 python run_cli.py experiment --config configs/experiment.yaml
 ```
 
+## Azure ML DAG pipeline
+
+Three-step Azure ML pipeline (Data Prep -> Inference -> Evaluation):
+
+- Pipeline job spec: `configs/azureml_pipeline_job.yaml`
+- Prep step: `scripts/azure/prepare_pipeline_inputs.py`
+- Inference step: `scripts/azure/run_pipeline_inference.py`
+- Evaluation step: `scripts/azure/evaluate_pipeline_run.py`
+
+Submit from PowerShell:
+
+```powershell
+.\scripts\azure\azureml_submit_pipeline_job.ps1 -WorkspaceName <workspace> -ResourceGroup <resource-group>
+```
+
+Submit from bash:
+
+```bash
+sh scripts/azure/azureml_submit_pipeline_job.sh <workspace> <resource-group>
+```
+
 ## Benchmark
 
 ```bash
