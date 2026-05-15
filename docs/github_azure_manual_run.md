@@ -12,6 +12,8 @@ Current repository:
 
 Run AutoQC in Azure ML while still using GitHub as your source of truth.
 
+Use a Python 3.11-based Azure ML environment for consistency with project pins.
+
 ## Option A (Recommended): Upload code snapshot from local clone
 
 1. Pull latest code from GitHub locally.
@@ -32,6 +34,10 @@ python run_cli.py run --config configs/azureml.yaml --images-path ${{inputs.imag
 - `MLFLOW_TRACKING_URI=azureml://southindia.api.azureml.ms/mlflow/v1.0/subscriptions/6d35e354-c39e-4f09-8a30-2d71bc4c833e/resourceGroups/rg-autoqc-sandbox-dev/providers/Microsoft.MachineLearningServices/workspaces/ml-autoqc-sandbox-dev`
 
 This gives you reproducible runs without requiring GitHub Actions RBAC changes.
+
+For DAG submissions (`configs/azureml_pipeline_job.yaml`), keep inference command as:
+`PYTHONPATH=. python scripts/azure/run_pipeline_inference.py ...`
+so package imports resolve correctly in Azure step execution.
 
 ## Option B: Direct private Git source in Azure ML (if supported in your tenant UI)
 

@@ -19,6 +19,11 @@ class BDDDatasetParser:
         images_path = Path(self.config.images_path)
         sample_idx = 0
         results: list[DetectionSample] = []
+        skipped_unknown_category = 0
+        skipped_missing_box = 0
+        skipped_small_or_invalid_box = 0
+        skipped_missing_image = 0
+        total_objects = 0
 
         label_files = sorted(labels_path.rglob("*.json"))
         if self.config.max_samples is not None:
@@ -32,6 +37,7 @@ class BDDDatasetParser:
             image_id = label_file.stem
             image_path = image_by_id.get(image_id)
             if image_path is None or not image_path.exists():
+                skipped_missing_image += 1
                 continue
 
             with label_file.open("r", encoding="utf-8") as handle:
@@ -39,16 +45,25 @@ class BDDDatasetParser:
 
             for frame in payload.get("frames", []):
                 for obj in frame.get("objects", []):
-                    category = obj.get("category")
+                    total_objects += 1
+                    category_raw = obj.get("category")
+                    category = (
+                        category_raw.strip().lower()
+                        if isinstance(category_raw, str)
+                        else category_raw
+                    )
                     if category not in self.class_to_idx:
+                        skipped_unknown_category += 1
                         continue
 
                     box = obj.get("box2d")
                     if not box:
+                        skipped_missing_box += 1
                         continue
 
                     normalized = self._normalize_box(box)
                     if normalized is None:
+                        skipped_small_or_invalid_box += 1
                         continue
 
                     attributes = obj.get("attributes", {})
@@ -67,6 +82,17 @@ class BDDDatasetParser:
                         )
                     )
                     sample_idx += 1
+
+        if not results:
+            raise RuntimeError(
+                "No usable samples found after parsing labels. "
+                f"Diagnostics: label_files={len(label_files)}, "
+                f"image_files={len(image_by_id)}, total_objects={total_objects}, "
+                f"skipped_missing_image={skipped_missing_image}, "
+                f"skipped_unknown_category={skipped_unknown_category}, "
+                f"skipped_missing_box={skipped_missing_box}, "
+                f"skipped_small_or_invalid_box={skipped_small_or_invalid_box}."
+            )
 
         return results
 

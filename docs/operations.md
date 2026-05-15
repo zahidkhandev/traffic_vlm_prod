@@ -59,6 +59,9 @@ Check:
 - `max_samples` is not zero
 - categories in labels match supported class list
 
+Current behavior:
+- if parsing yields zero usable samples, the run fails with skip diagnostics instead of silently succeeding with zero metrics.
+
 ### MLflow run missing
 Check:
 - `mlflow.enabled: true`

@@ -28,7 +28,8 @@ def main() -> int:
 
     metrics = inference_summary.get("metrics", {})
     error_rate = float(metrics.get("error_rate", 1.0))
-    passed = error_rate <= args.max_error_rate
+    total_samples = int(metrics.get("total_samples", 0))
+    passed = total_samples > 0 and error_rate <= args.max_error_rate
 
     evaluation = {
         "run_id": inference_summary.get("run_id"),
@@ -37,6 +38,7 @@ def main() -> int:
         "quality_gate": {
             "max_error_rate": args.max_error_rate,
             "actual_error_rate": error_rate,
+            "total_samples": total_samples,
             "passed": passed,
         },
     }

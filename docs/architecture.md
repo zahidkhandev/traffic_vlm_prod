@@ -40,10 +40,12 @@ Important things it does:
 Reads BDD-style labels and creates detection samples.
 
 Important things it does:
-- loops over label files
-- matches image files
+- scans label/image files recursively (nested folders supported)
+- matches image files by stem across nested image folders
 - filters categories
 - removes invalid or tiny boxes
+- normalizes category text to lowercase before class matching
+- fails fast with diagnostic counters if zero usable samples remain
 
 ### `qwen_auto_qc/vlm/classifier.py`
 This is the Qwen inference layer.
@@ -120,3 +122,9 @@ This matches the production direction better than crop-only inference.
 - no real batch inference optimization yet
 - no final dashboard yet
 - no final drift logic yet
+
+## Azure pipeline behavior
+
+- `prepare_pipeline_inputs.py` validates mounted inputs and counts recursive `*.json` labels and `*.jpg` images.
+- `run_pipeline_inference.py` runs under `PYTHONPATH=.` in the pipeline spec to keep imports stable in Azure execution.
+- `evaluate_pipeline_run.py` fails quality gate when `total_samples` is zero.

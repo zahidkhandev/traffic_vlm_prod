@@ -73,6 +73,7 @@ sh scripts/bootstrap_local.sh
 
 Keep your dataset inside `data/raw/`.
 Keep your model inside `models/`.
+Use Python 3.11 for local and Azure parity.
 
 Do not commit personal runtime paths.
 Pass these through env vars or CLI args.
@@ -122,6 +123,11 @@ Three-step Azure ML pipeline (Data Prep -> Inference -> Evaluation):
 - Prep step: `scripts/azure/prepare_pipeline_inputs.py`
 - Inference step: `scripts/azure/run_pipeline_inference.py`
 - Evaluation step: `scripts/azure/evaluate_pipeline_run.py`
+
+Important runtime notes:
+- `prepare_pipeline_inputs.py` scans images/labels recursively, so nested asset layouts are supported.
+- Inference command uses `PYTHONPATH=. python ...` in pipeline YAML so `qwen_auto_qc` imports work in Azure job context.
+- Evaluation fails quality gate when `total_samples == 0` (zero-sample runs do not pass).
 
 Submit from PowerShell:
 
@@ -224,10 +230,8 @@ What still needs real smoke validation:
 - `docs/architecture.md`
 - `docs/config_reference.md`
 - `docs/local_run.md`
-- `docs/mlflow_local.md`
 - `docs/container.md`
 - `docs/testing.md`
 - `docs/operations.md`
-- `docs/production_steps.md`
 - `docs/experimentation.md`
 - `docs/github_azure_manual_run.md`

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -20,6 +21,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--config", default="configs/azureml.yaml")
     parser.add_argument("--prepared-inputs", required=True)
+    parser.add_argument("--images-path")
+    parser.add_argument("--labels-path")
     parser.add_argument("--model-path")
     parser.add_argument("--output-dir", required=True)
     return parser.parse_args()
@@ -33,9 +36,35 @@ def main() -> int:
 
     payload = json.loads(prepared_inputs.read_text(encoding="utf-8"))
     config = load_run_config(args.config)
+    selected_images_path = args.images_path or payload["images_path"]
+    selected_labels_path = args.labels_path or payload["labels_path"]
+    images_path_obj = Path(selected_images_path)
+    labels_path_obj = Path(selected_labels_path)
+    image_count = len(list(images_path_obj.rglob("*.jpg"))) if images_path_obj.exists() else 0
+    label_count = len(list(labels_path_obj.rglob("*.json"))) if labels_path_obj.exists() else 0
+    print(
+        json.dumps(
+            {
+                "event": "inference_input_diagnostics",
+                "cwd": os.getcwd(),
+                "prepared_inputs_path": str(prepared_inputs),
+                "selected_images_path": str(images_path_obj),
+                "selected_labels_path": str(labels_path_obj),
+                "selected_images_exists": images_path_obj.exists(),
+                "selected_labels_exists": labels_path_obj.exists(),
+                "selected_image_count_jpg": image_count,
+                "selected_label_count_json": label_count,
+                "args_images_path": args.images_path,
+                "args_labels_path": args.labels_path,
+                "payload_images_path": payload.get("images_path"),
+                "payload_labels_path": payload.get("labels_path"),
+            },
+            indent=2,
+        )
+    )
     config = config.copy_with(
-        images_path=payload["images_path"],
-        labels_path=payload["labels_path"],
+        images_path=selected_images_path,
+        labels_path=selected_labels_path,
         output_root=str(output_dir),
         checkpoint_root=str(output_dir / "checkpoints"),
         model_path=args.model_path or config.model_path,

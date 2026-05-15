@@ -2,6 +2,7 @@
 
 ## Before run
 - install deps
+- use Python 3.11
 - create a `.env` file in the project root
 - make sure `qwen_vl_utils` works in your env
 - make sure dataset is inside `data/raw/`
@@ -69,6 +70,9 @@ Main files:
 Monitoring files:
 - `run_manifest.json` keeps config hash and config changes vs previous run
 - `runs/run_index.json` keeps a simple list of runs
+
+If the parser finds zero usable objects, the run fails with skip diagnostics
+instead of producing a misleading zero-metric success run.
 
 ## Benchmark
 ```bash

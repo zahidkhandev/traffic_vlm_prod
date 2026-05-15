@@ -56,6 +56,10 @@ jobs:
       inputs:
         prepared_data:
           type: uri_folder
+        images_path:
+          type: uri_folder
+        labels_path:
+          type: uri_folder
       outputs:
         inference_output:
           type: uri_folder
@@ -63,10 +67,14 @@ jobs:
         PYTHONPATH=. python scripts/azure/run_pipeline_inference.py
         --config configs/azureml.yaml
         --prepared-inputs ${{inputs.prepared_data}}/prepared_inputs.json
+        --images-path ${{inputs.images_path}}
+        --labels-path ${{inputs.labels_path}}
         --model-path qwen-vl-4b
         --output-dir ${{outputs.inference_output}}
     inputs:
       prepared_data: ${{parent.jobs.prepare_data.outputs.prepared_data}}
+      images_path: ${{parent.inputs.images_path}}
+      labels_path: ${{parent.inputs.labels_path}}
     outputs:
       inference_output:
         type: uri_folder

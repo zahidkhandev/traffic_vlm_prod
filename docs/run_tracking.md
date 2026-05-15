@@ -34,6 +34,7 @@ This is a simple history file.
 It stores one entry per run:
 - run id
 - run dir
+- inference mode
 - total samples
 - flagged samples
 - error rate
@@ -46,3 +47,7 @@ Now you can:
 - see which config changed
 - see how metrics changed
 - track run history without opening every folder manually
+
+For Azure DAG runs, `evaluation_summary.json` also includes:
+- `quality_gate.total_samples`
+- gate fails when `total_samples == 0`

@@ -1,6 +1,7 @@
 # Config Reference
 
 This project mainly uses `configs/local.yaml`.
+Baseline runtime is Python 3.11 (`conda.yaml` and `pyproject.toml` are pinned).
 
 ## Main config fields
 
@@ -17,7 +18,7 @@ model_path: models/qwen-vl-4b
 ### `images_path`
 Required at runtime.
 Pass through env var or CLI.
-Path to images.
+Path to images (local path or mounted Azure input path).
 
 Use a relative path inside this project.
 
@@ -29,7 +30,7 @@ images_path: data/raw/mini/images/test
 ### `labels_path`
 Required at runtime.
 Pass through env var or CLI.
-Path to labels.
+Path to labels (local path or mounted Azure input path).
 
 Use a relative path inside this project.
 
@@ -73,6 +74,10 @@ Save progress after this many samples.
 
 ### `min_box_size`
 Boxes smaller than this are ignored.
+
+### `class_names`
+Allowed object categories.
+Category text from labels is normalized to lowercase before matching.
 
 ### `console_log_each_object`
 When true, prints one JSON line per object for inference and one JSON line per
@@ -124,3 +129,11 @@ max_samples: 2
 mlflow:
   enabled: true
 ```
+
+## Zero-sample behavior
+
+If no usable objects are produced after parsing/filtering, the run now fails with diagnostics:
+- label file count
+- image file count
+- total objects seen
+- skip counters (missing image, unknown category, missing box, invalid/small box)
