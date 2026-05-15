@@ -20,14 +20,18 @@ class BDDDatasetParser:
         sample_idx = 0
         results: list[DetectionSample] = []
 
-        label_files = sorted(labels_path.glob("*.json"))
+        label_files = sorted(labels_path.rglob("*.json"))
         if self.config.max_samples is not None:
             label_files = label_files[: self.config.max_samples]
 
+        image_by_id: dict[str, Path] = {}
+        for image_file in images_path.rglob("*.jpg"):
+            image_by_id.setdefault(image_file.stem, image_file)
+
         for label_file in label_files:
             image_id = label_file.stem
-            image_path = images_path / f"{image_id}.jpg"
-            if not image_path.exists():
+            image_path = image_by_id.get(image_id)
+            if image_path is None or not image_path.exists():
                 continue
 
             with label_file.open("r", encoding="utf-8") as handle:

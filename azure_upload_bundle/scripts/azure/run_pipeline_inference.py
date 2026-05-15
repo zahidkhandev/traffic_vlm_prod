@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from qwen_auto_qc.config import load_run_config, validate_run_config
 from qwen_auto_qc.pipeline.processor import AutoQCPipeline
+
+# Ensure package imports work when executed as a script in Azure ML command jobs.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 
 def parse_args() -> argparse.Namespace:

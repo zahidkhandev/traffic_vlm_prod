@@ -27,8 +27,8 @@ def main() -> int:
     if not labels_path.exists():
         raise FileNotFoundError(f"labels path does not exist: {labels_path}")
 
-    label_files = sorted(labels_path.glob("*.json"))
-    image_files = sorted(images_path.glob("*.jpg"))
+    label_files = sorted(labels_path.rglob("*.json"))
+    image_files = sorted(images_path.rglob("*.jpg"))
     if not label_files:
         raise RuntimeError(f"no label files found in: {labels_path}")
     if not image_files:
