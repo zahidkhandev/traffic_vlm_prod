@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 
 
@@ -34,11 +35,33 @@ def main() -> int:
     if not image_files:
         raise RuntimeError(f"no image files found in: {images_path}")
 
+    staged_images_dir = output_dir / "images"
+    staged_labels_dir = output_dir / "labels"
+    staged_images_dir.mkdir(parents=True, exist_ok=True)
+    staged_labels_dir.mkdir(parents=True, exist_ok=True)
+
+    image_by_stem = {path.stem: path for path in image_files}
+    matched_pairs = 0
+    for label_file in label_files:
+        image_file = image_by_stem.get(label_file.stem)
+        if image_file is None:
+            continue
+        shutil.copy2(label_file, staged_labels_dir / label_file.name)
+        shutil.copy2(image_file, staged_images_dir / image_file.name)
+        matched_pairs += 1
+
+    if matched_pairs == 0:
+        raise RuntimeError(
+            "no matched image/label pairs found for staging: "
+            f"labels={len(label_files)}, images={len(image_files)}"
+        )
+
     payload = {
-        "images_path": str(images_path),
-        "labels_path": str(labels_path),
+        "images_subdir": "images",
+        "labels_subdir": "labels",
         "label_file_count": len(label_files),
         "image_file_count": len(image_files),
+        "matched_pair_count": matched_pairs,
     }
     target = output_dir / "prepared_inputs.json"
     target.write_text(json.dumps(payload, indent=2), encoding="utf-8")

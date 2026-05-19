@@ -3,6 +3,7 @@
 ## What is covered now
 
 Current tests cover:
+
 - config loading
 - env var expansion
 - dataset box filtering
@@ -10,6 +11,7 @@ Current tests cover:
 - inference response parsing
 - scoring logic
 - pipeline output persistence
+- unresolved required `${ENV_VAR}` placeholders fail config validation
 
 ## Test files
 

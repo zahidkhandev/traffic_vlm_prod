@@ -36,12 +36,20 @@ def main() -> int:
 
     payload = json.loads(prepared_inputs.read_text(encoding="utf-8"))
     config = load_run_config(args.config)
-    selected_images_path = args.images_path or payload["images_path"]
-    selected_labels_path = args.labels_path or payload["labels_path"]
+    if "images_subdir" in payload and "labels_subdir" in payload:
+        selected_images_path = str(prepared_inputs.parent / payload["images_subdir"])
+        selected_labels_path = str(prepared_inputs.parent / payload["labels_subdir"])
+    else:
+        selected_images_path = args.images_path or payload["images_path"]
+        selected_labels_path = args.labels_path or payload["labels_path"]
     images_path_obj = Path(selected_images_path)
     labels_path_obj = Path(selected_labels_path)
-    image_count = len(list(images_path_obj.rglob("*.jpg"))) if images_path_obj.exists() else 0
-    label_count = len(list(labels_path_obj.rglob("*.json"))) if labels_path_obj.exists() else 0
+    image_count = (
+        len(list(images_path_obj.rglob("*.jpg"))) if images_path_obj.exists() else 0
+    )
+    label_count = (
+        len(list(labels_path_obj.rglob("*.json"))) if labels_path_obj.exists() else 0
+    )
     print(
         json.dumps(
             {

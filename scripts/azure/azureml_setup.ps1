@@ -16,12 +16,18 @@ param(
     [Parameter(Mandatory = $false)]
     [int]$ComputeMaxNodes = 2,
     [Parameter(Mandatory = $false)]
-    [string]$BddImagesPath = "azureml://datastores/workspaceblobstore/paths/bdd/images/test",
+    [string]$BddImagesPath = "",
     [Parameter(Mandatory = $false)]
-    [string]$BddLabelsPath = "azureml://datastores/workspaceblobstore/paths/bdd/labels/test"
+    [string]$BddLabelsPath = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $BddImagesPath) { $BddImagesPath = $env:AUTOQC_AZUREML_IMAGES_PATH }
+if (-not $BddLabelsPath) { $BddLabelsPath = $env:AUTOQC_AZUREML_LABELS_PATH }
+if (-not $BddImagesPath -or -not $BddLabelsPath) {
+    throw "Set -BddImagesPath/-BddLabelsPath or define AUTOQC_AZUREML_IMAGES_PATH and AUTOQC_AZUREML_LABELS_PATH."
+}
 
 az account set --subscription $SubscriptionId
 az group create --name $ResourceGroup --location $Location | Out-Null

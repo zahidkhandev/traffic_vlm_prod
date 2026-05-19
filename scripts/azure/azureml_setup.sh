@@ -9,8 +9,13 @@ COMPUTE_NAME="${5:-autoqc-sandbox-dev-gpu-cluster}"
 COMPUTE_SIZE="${6:-Standard_NC4as_T4_v3}"
 COMPUTE_MIN_NODES="${7:-0}"
 COMPUTE_MAX_NODES="${8:-2}"
-BDD_IMAGES_PATH="${9:-azureml://datastores/workspaceblobstore/paths/bdd/images/test}"
-BDD_LABELS_PATH="${10:-azureml://datastores/workspaceblobstore/paths/bdd/labels/test}"
+BDD_IMAGES_PATH="${9:-${AUTOQC_AZUREML_IMAGES_PATH:-}}"
+BDD_LABELS_PATH="${10:-${AUTOQC_AZUREML_LABELS_PATH:-}}"
+
+if [ -z "$BDD_IMAGES_PATH" ] || [ -z "$BDD_LABELS_PATH" ]; then
+  echo "Set args 9/10 or export AUTOQC_AZUREML_IMAGES_PATH and AUTOQC_AZUREML_LABELS_PATH." >&2
+  exit 1
+fi
 
 az account set --subscription "$SUBSCRIPTION_ID"
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION" >/dev/null

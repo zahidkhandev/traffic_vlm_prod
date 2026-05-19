@@ -1,6 +1,6 @@
 model_path: qwen-vl-4b
-images_path: azureml://datastores/workspaceblobstore/paths/bdd/images/test
-labels_path: azureml://datastores/workspaceblobstore/paths/bdd/labels/test
+images_path: ${AUTOQC_AZUREML_IMAGES_PATH}
+labels_path: ${AUTOQC_AZUREML_LABELS_PATH}
 output_root: outputs/qwen_auto_qc
 checkpoint_root: outputs/qwen_auto_qc/checkpoints
 device: cuda

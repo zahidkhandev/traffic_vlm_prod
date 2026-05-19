@@ -24,6 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--images-path")
     parser.add_argument("--labels-path")
     parser.add_argument("--model-path")
+    parser.add_argument("--inference-mode")
     parser.add_argument("--output-dir", required=True)
     return parser.parse_args()
 
@@ -36,8 +37,12 @@ def main() -> int:
 
     payload = json.loads(prepared_inputs.read_text(encoding="utf-8"))
     config = load_run_config(args.config)
-    selected_images_path = args.images_path or payload["images_path"]
-    selected_labels_path = args.labels_path or payload["labels_path"]
+    if "images_subdir" in payload and "labels_subdir" in payload:
+        selected_images_path = str(prepared_inputs.parent / payload["images_subdir"])
+        selected_labels_path = str(prepared_inputs.parent / payload["labels_subdir"])
+    else:
+        selected_images_path = args.images_path or payload["images_path"]
+        selected_labels_path = args.labels_path or payload["labels_path"]
     images_path_obj = Path(selected_images_path)
     labels_path_obj = Path(selected_labels_path)
     image_count = len(list(images_path_obj.rglob("*.jpg"))) if images_path_obj.exists() else 0
@@ -68,6 +73,7 @@ def main() -> int:
         output_root=str(output_dir),
         checkpoint_root=str(output_dir / "checkpoints"),
         model_path=args.model_path or config.model_path,
+        inference_mode=args.inference_mode or config.inference_mode,
     )
     config = validate_run_config(config)
 

@@ -12,12 +12,12 @@ command: >-
 inputs:
   images_path:
     type: uri_folder
-    path: azureml:bdd-images:latest
+    path: azureml:${AUTOQC_AZUREML_IMAGES_DATA_ASSET}:latest
   labels_path:
     type: uri_folder
-    path: azureml:bdd-labels:latest
+    path: azureml:${AUTOQC_AZUREML_LABELS_DATA_ASSET}:latest
   model_path:
     type: string
     default: qwen-vl-4b
-environment: azureml:qwen-autoqc:latest
-compute: azureml:autoqc-sandbox-dev-gpu-cluster
+environment: azureml:${AUTOQC_AZUREML_ENVIRONMENT}:latest
+compute: azureml:${AUTOQC_AZUREML_COMPUTE}

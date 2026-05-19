@@ -17,7 +17,24 @@ if (-not (Test-Path -LiteralPath (Join-Path $repoRoot "scripts\azure\prepare_pip
     throw "Missing required file: scripts/azure/prepare_pipeline_inputs.py"
 }
 
+$tmpSpec = Join-Path ([System.IO.Path]::GetTempPath()) ("azureml_pipeline_expanded_{0}.yaml" -f ([System.Guid]::NewGuid().ToString("N")))
+$content = Get-Content -LiteralPath $jobSpecResolved -Raw
+$expanded = [System.Text.RegularExpressions.Regex]::Replace(
+    $content,
+    '\$\{([A-Z0-9_]+)\}',
+    {
+        param($m)
+        $name = $m.Groups[1].Value
+        $val = [System.Environment]::GetEnvironmentVariable($name)
+        if ([string]::IsNullOrEmpty($val)) { return $m.Value }
+        return $val
+    }
+)
+Set-Content -LiteralPath $tmpSpec -Value $expanded -Encoding UTF8
+
 az ml job create `
-    --file $jobSpecResolved `
+    --file $tmpSpec `
     --workspace-name $WorkspaceName `
     --resource-group $ResourceGroup
+
+Remove-Item -LiteralPath $tmpSpec -Force
